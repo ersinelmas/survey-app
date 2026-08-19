@@ -5,6 +5,9 @@ using Microsoft.IdentityModel.Tokens;
 using SurveyApp.Application.Interfaces;
 using SurveyApp.Infrastructure.Data;
 using SurveyApp.Infrastructure.Services;
+using SurveyApp.Application.Services;
+using SurveyApp.Core.Interfaces;
+using SurveyApp.Infrastructure.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +19,8 @@ builder.Services.AddDbContext<SurveyDbContext>(options =>
 // Custom services
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<AuthService>();
 
 // JWT Authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
