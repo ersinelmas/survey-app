@@ -86,4 +86,27 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+// Seed initial admin user
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<SurveyDbContext>();
+    var passwordHasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
+
+    if (!context.Users.Any(u => u.Role == SurveyApp.Core.Entities.UserRole.Admin))
+    {
+        var admin = new SurveyApp.Core.Entities.User
+        {
+            Id = Guid.NewGuid(),
+            Email = "admin@surveyapp.com",
+            PasswordHash = passwordHasher.Hash("Admin123!"),
+            Role = SurveyApp.Core.Entities.UserRole.Admin
+        };
+
+        context.Users.Add(admin);
+        context.SaveChanges();
+
+        Console.WriteLine("Seed: Admin kullanıcı oluşturuldu -> admin@surveyapp.com / Admin123!");
+    }
+}
+
 app.Run();
