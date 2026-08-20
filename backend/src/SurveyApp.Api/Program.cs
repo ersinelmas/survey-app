@@ -23,6 +23,8 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<IAnswerTemplateRepository, AnswerTemplateRepository>();
 builder.Services.AddScoped<AnswerTemplateService>();
+builder.Services.AddScoped<IQuestionRepository, QuestionRepository>();
+builder.Services.AddScoped<QuestionService>();
 
 // JWT Authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
