@@ -1,6 +1,7 @@
 using SurveyApp.Core.Entities;
 using SurveyApp.Core.Interfaces;
 using SurveyApp.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace SurveyApp.Infrastructure.Repositories;
 
@@ -21,5 +22,14 @@ public class SurveyResponseRepository : ISurveyResponseRepository
     public async Task SaveChangesAsync()
     {
         await _context.SaveChangesAsync();
+    }
+
+    public async Task<List<SurveyResponse>> GetBySurveyIdAsync(Guid surveyId)
+    {
+        return await _context.SurveyResponses
+            .Include(r => r.User)
+            .Include(r => r.SelectedOption)
+            .Where(r => r.SurveyId == surveyId)
+            .ToListAsync();
     }
 }

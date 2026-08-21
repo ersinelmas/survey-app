@@ -9,15 +9,18 @@ public class SurveyService
     private readonly ISurveyRepository _surveyRepository;
     private readonly IQuestionRepository _questionRepository;
     private readonly IUserRepository _userRepository;
+    private readonly ISurveyResponseRepository _responseRepository;
 
     public SurveyService(
         ISurveyRepository surveyRepository,
         IQuestionRepository questionRepository,
-        IUserRepository userRepository)
+        IUserRepository userRepository,
+        ISurveyResponseRepository responseRepository)
     {
         _surveyRepository = surveyRepository;
         _questionRepository = questionRepository;
         _userRepository = userRepository;
+        _responseRepository = responseRepository;
     }
 
     public async Task<List<SurveyDto>> GetAllAsync()
@@ -133,6 +136,54 @@ public class SurveyService
     {
         if (endDate <= startDate)
             throw new ArgumentException("Bitiş tarihi, başlangıç tarihinden sonra olmalıdır.");
+    }
+
+    public async Task<SurveyReportDto> GetReportAsync(Guid surveyId)
+    {
+        var survey = await _surveyRepository.GetByIdWithResponsesAsync(surveyId);
+        if (survey is null)
+            throw new KeyNotFoundException("Anket bulunamadı.");
+
+        var responses = await _responseRepository.GetBySurveyIdAsync(surveyId);
+
+        var completed = survey.Assignments.Where(a => a.IsCompleted).ToList();
+        var pending = survey.Assignments.Where(a => !a.IsCompleted).ToList();
+
+        var questionSummaries = survey.SurveyQuestions
+            .OrderBy(sq => sq.Order)
+            .Select(sq => new QuestionResponseSummaryDto
+            {
+                QuestionId = sq.QuestionId,
+                QuestionText = sq.Question.Text,
+                UserAnswers = responses
+                    .Where(r => r.QuestionId == sq.QuestionId)
+                    .Select(r => new UserAnswerDto
+                    {
+                        UserEmail = r.User.Email,
+                        SelectedOptionText = r.SelectedOption.Text
+                    }).ToList()
+            }).ToList();
+
+        return new SurveyReportDto
+        {
+            SurveyId = survey.Id,
+            Title = survey.Title,
+            TotalAssigned = survey.Assignments.Count,
+            TotalCompleted = completed.Count,
+            CompletedByUsers = completed.Select(a => new UserCompletionDto
+            {
+                UserId = a.UserId,
+                Email = a.User.Email,
+                CompletedAt = a.CompletedAt
+            }).ToList(),
+            PendingUsers = pending.Select(a => new UserCompletionDto
+            {
+                UserId = a.UserId,
+                Email = a.User.Email,
+                CompletedAt = null
+            }).ToList(),
+            QuestionSummaries = questionSummaries
+        };
     }
 
     private static SurveyDto MapToDto(Survey survey)

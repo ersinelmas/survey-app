@@ -44,4 +44,12 @@ public class SurveyRepository : ISurveyRepository
     {
         await _context.SaveChangesAsync();
     }
+
+    public async Task<Survey?> GetByIdWithResponsesAsync(Guid id)
+    {
+        return await _context.Surveys
+            .Include(s => s.SurveyQuestions).ThenInclude(sq => sq.Question)
+            .Include(s => s.Assignments).ThenInclude(a => a.User)
+            .FirstOrDefaultAsync(s => s.Id == id);
+    }
 }

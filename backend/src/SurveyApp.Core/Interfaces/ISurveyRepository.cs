@@ -9,4 +9,5 @@ public interface ISurveyRepository
     Task AddAsync(Survey survey);
     void Remove(Survey survey);
     Task SaveChangesAsync();
+    Task<Survey?> GetByIdWithResponsesAsync(Guid id);
 }
