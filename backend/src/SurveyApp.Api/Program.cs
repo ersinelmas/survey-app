@@ -25,6 +25,8 @@ builder.Services.AddScoped<IAnswerTemplateRepository, AnswerTemplateRepository>(
 builder.Services.AddScoped<AnswerTemplateService>();
 builder.Services.AddScoped<IQuestionRepository, QuestionRepository>();
 builder.Services.AddScoped<QuestionService>();
+builder.Services.AddScoped<ISurveyRepository, SurveyRepository>();
+builder.Services.AddScoped<SurveyService>();
 
 // JWT Authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
