@@ -3,21 +3,21 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Box, Button, TextField, Typography, Alert, Paper } from '@mui/material';
 import { useAuth } from '../context/AuthContext';
 
-function LoginPage() {
+function RegisterPage() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
-    const { login } = useAuth();
+    const { register } = useAuth();
     const navigate = useNavigate();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
         try {
-            await login({ email, password });
+            await register({ email, password });
             navigate('/');
         } catch (err) {
-            setError('Email veya şifre hatalı.');
+            setError('Kayıt sırasında bir hata oluştu. Bu email zaten kayıtlı olabilir.');
         }
     };
 
@@ -32,7 +32,7 @@ function LoginPage() {
         >
             <Paper elevation={3} sx={{ padding: 4, width: 350 }}>
                 <Typography variant="h5" sx={{ mb: 2 }}>
-                    Giriş Yap
+                    Kayıt Ol
                 </Typography>
                 {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
                 <form onSubmit={handleSubmit}>
@@ -55,15 +55,15 @@ function LoginPage() {
                         required
                     />
                     <Button type="submit" variant="contained" fullWidth sx={{ mt: 2 }}>
-                        Giriş Yap
+                        Kayıt Ol
                     </Button>
                 </form>
                 <Typography variant="body2" sx={{ mt: 2, textAlign: 'center' }}>
-                    Hesabınız yok mu? <Link to="/register">Kayıt Ol</Link>
+                    Zaten hesabınız var mı? <Link to="/login">Giriş Yap</Link>
                 </Typography>
             </Paper>
         </Box>
     );
 }
 
-export default LoginPage;
+export default RegisterPage;
