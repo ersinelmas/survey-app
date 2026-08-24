@@ -82,12 +82,14 @@ public class AnswerTemplateService
             }
             else
             {
-                template.Options.Add(new AnswerOption
+                var newOption = new AnswerOption
                 {
                     Id = Guid.NewGuid(),
+                    AnswerTemplateId = template.Id,
                     Text = optionRequest.Text,
                     Order = optionRequest.Order
-                });
+                };
+                _repository.AddOption(newOption);
             }
         }
 

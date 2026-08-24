@@ -9,4 +9,5 @@ public interface IAnswerTemplateRepository
     Task AddAsync(AnswerTemplate template);
     void Remove(AnswerTemplate template);
     Task SaveChangesAsync();
+    void AddOption(AnswerOption option);
 }

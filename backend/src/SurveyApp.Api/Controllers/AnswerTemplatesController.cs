@@ -68,6 +68,10 @@ public class AnswerTemplatesController : ControllerBase
         {
             return BadRequest(new { message = ex.Message });
         }
+        catch (Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException)
+        {
+            return Conflict(new { message = "Bu kayıt başka bir işlem tarafından değiştirilmiş olabilir. Lütfen sayfayı yenileyip tekrar deneyin." });
+        }
     }
 
     [HttpDelete("{id}")]

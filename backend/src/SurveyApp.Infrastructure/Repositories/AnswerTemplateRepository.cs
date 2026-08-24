@@ -42,4 +42,9 @@ public class AnswerTemplateRepository : IAnswerTemplateRepository
     {
         await _context.SaveChangesAsync();
     }
+
+    public void AddOption(AnswerOption option)
+    {
+        _context.AnswerOptions.Add(option);
+    }
 }

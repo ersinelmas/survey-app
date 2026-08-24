@@ -1,9 +1,24 @@
+import { Box, Button, Typography } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 
 function AdminDashboard() {
+    const navigate = useNavigate();
+
     return (
         <Layout>
-            <div>Admin Paneli (geçici)</div>
+            <Typography variant="h5" sx={{ mb: 2 }}>Admin Paneli</Typography>
+            <Box sx={{ display: 'flex', gap: 2 }}>
+                <Button variant="outlined" onClick={() => navigate('/admin/answer-templates')}>
+                    Cevap Şablonları
+                </Button>
+                <Button variant="outlined" disabled>
+                    Sorular (yakında)
+                </Button>
+                <Button variant="outlined" disabled>
+                    Anketler (yakında)
+                </Button>
+            </Box>
         </Layout>
     );
 }

@@ -4,6 +4,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import LoginPage from './pages/LoginPage';
 import AdminDashboard from './pages/AdminDashboard';
 import UserDashboard from './pages/UserDashboard';
+import AnswerTemplatesPage from './pages/AnswerTemplatesPage';
 
 function HomeRedirect() {
   const { role } = useAuth();
@@ -30,6 +31,14 @@ function App() {
             element={
               <ProtectedRoute requiredRole="Admin">
                 <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/answer-templates"
+            element={
+              <ProtectedRoute requiredRole="Admin">
+                <AnswerTemplatesPage />
               </ProtectedRoute>
             }
           />
