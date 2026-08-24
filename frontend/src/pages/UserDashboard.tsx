@@ -35,7 +35,7 @@ function UserDashboard() {
 
             <Grid container spacing={2}>
                 {surveys.map((survey) => (
-                    <Grid item xs={12} sm={6} md={4} key={survey.surveyId}>
+                    <Grid size={{ xs: 12, sm: 6, md: 4 }} key={survey.surveyId}>
                         <Card>
                             <CardContent>
                                 <Typography variant="h6">{survey.title}</Typography>
