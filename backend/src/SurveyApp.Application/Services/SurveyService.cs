@@ -76,10 +76,16 @@ public class SurveyService
         survey.IsActive = request.IsActive;
 
         _surveyRepository.RemoveSurveyQuestions(survey.SurveyQuestions.ToList());
-        _surveyRepository.RemoveAssignments(survey.Assignments.ToList());
-
         await AttachQuestions(survey, request.QuestionIds);
-        await AttachAssignments(survey, request.AssignedUserIds);
+
+        var existingUserIds = survey.Assignments.Select(a => a.UserId).ToHashSet();
+        var newUserIds = request.AssignedUserIds.ToHashSet();
+
+        var toRemove = survey.Assignments.Where(a => !newUserIds.Contains(a.UserId)).ToList();
+        _surveyRepository.RemoveAssignments(toRemove);
+
+        var toAddUserIds = request.AssignedUserIds.Where(uid => !existingUserIds.Contains(uid)).ToList();
+        await AttachAssignments(survey, toAddUserIds);
 
         await _surveyRepository.SaveChangesAsync();
 

@@ -17,9 +17,15 @@ public class UsersController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll()
+    public async Task<IActionResult> GetAll([FromQuery] string? role)
     {
         var users = await _userRepository.GetAllAsync();
+
+        if (!string.IsNullOrEmpty(role))
+        {
+            users = users.Where(u => u.Role.ToString() == role).ToList();
+        }
+
         var result = users.Select(u => new { u.Id, u.Email, Role = u.Role.ToString() });
         return Ok(result);
     }

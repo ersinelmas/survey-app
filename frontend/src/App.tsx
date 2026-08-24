@@ -7,6 +7,7 @@ import UserDashboard from './pages/UserDashboard';
 import AnswerTemplatesPage from './pages/AnswerTemplatesPage';
 import QuestionsPage from './pages/QuestionsPage';
 import SurveysPage from './pages/SurveysPage';
+import FillSurveyPage from './pages/FillSurveyPage';
 
 function HomeRedirect() {
   const { role } = useAuth();
@@ -45,14 +46,6 @@ function App() {
             }
           />
           <Route
-            path="/my-surveys"
-            element={
-              <ProtectedRoute>
-                <UserDashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
             path="/admin/questions"
             element={
               <ProtectedRoute requiredRole="Admin">
@@ -65,6 +58,22 @@ function App() {
             element={
               <ProtectedRoute requiredRole="Admin">
                 <SurveysPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/my-surveys"
+            element={
+              <ProtectedRoute>
+                <UserDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/my-surveys/:surveyId"
+            element={
+              <ProtectedRoute>
+                <FillSurveyPage />
               </ProtectedRoute>
             }
           />

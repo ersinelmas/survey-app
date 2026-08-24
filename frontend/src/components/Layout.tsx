@@ -12,11 +12,21 @@ function Layout({ children }: { children: ReactNode }) {
         navigate('/login');
     };
 
+    const handleHomeClick = () => {
+        navigate(role === 'Admin' ? '/admin' : '/my-surveys');
+    };
+
     return (
         <Box>
             <AppBar position="static">
                 <Toolbar sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <Typography variant="h6">Survey App</Typography>
+                    <Typography
+                        variant="h6"
+                        onClick={handleHomeClick}
+                        sx={{ cursor: 'pointer' }}
+                    >
+                        Survey App
+                    </Typography>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                         <Typography variant="body2">{email} ({role})</Typography>
                         <Button color="inherit" onClick={handleLogout}>

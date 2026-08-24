@@ -36,7 +36,7 @@ function SurveysPage() {
         const [surveysData, questionsData, usersData] = await Promise.all([
             getSurveys(),
             getQuestions(),
-            getUsers(),
+            getUsers('User'),
         ]);
         setSurveys(surveysData);
         setQuestions(questionsData);
