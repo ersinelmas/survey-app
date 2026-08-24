@@ -5,6 +5,7 @@ import LoginPage from './pages/LoginPage';
 import AdminDashboard from './pages/AdminDashboard';
 import UserDashboard from './pages/UserDashboard';
 import AnswerTemplatesPage from './pages/AnswerTemplatesPage';
+import QuestionsPage from './pages/QuestionsPage';
 
 function HomeRedirect() {
   const { role } = useAuth();
@@ -47,6 +48,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <UserDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/questions"
+            element={
+              <ProtectedRoute requiredRole="Admin">
+                <QuestionsPage />
               </ProtectedRoute>
             }
           />

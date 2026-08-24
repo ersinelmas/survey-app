@@ -12,8 +12,8 @@ function AdminDashboard() {
                 <Button variant="outlined" onClick={() => navigate('/admin/answer-templates')}>
                     Cevap Şablonları
                 </Button>
-                <Button variant="outlined" disabled>
-                    Sorular (yakında)
+                <Button variant="outlined" onClick={() => navigate('/admin/questions')}>
+                    Sorular
                 </Button>
                 <Button variant="outlined" disabled>
                     Anketler (yakında)
