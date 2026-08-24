@@ -75,8 +75,8 @@ public class SurveyService
         survey.EndDate = request.EndDate;
         survey.IsActive = request.IsActive;
 
-        survey.SurveyQuestions.Clear();
-        survey.Assignments.Clear();
+        _surveyRepository.RemoveSurveyQuestions(survey.SurveyQuestions.ToList());
+        _surveyRepository.RemoveAssignments(survey.Assignments.ToList());
 
         await AttachQuestions(survey, request.QuestionIds);
         await AttachAssignments(survey, request.AssignedUserIds);
@@ -104,13 +104,14 @@ public class SurveyService
             if (question is null)
                 throw new KeyNotFoundException($"Soru bulunamadı: {questionIds[i]}");
 
-            survey.SurveyQuestions.Add(new SurveyQuestion
+            var surveyQuestion = new SurveyQuestion
             {
                 Id = Guid.NewGuid(),
                 SurveyId = survey.Id,
                 QuestionId = question.Id,
                 Order = i + 1
-            });
+            };
+            _surveyRepository.AddSurveyQuestion(surveyQuestion);
         }
     }
 
@@ -122,13 +123,14 @@ public class SurveyService
             if (user is null)
                 throw new KeyNotFoundException($"Kullanıcı bulunamadı: {userId}");
 
-            survey.Assignments.Add(new SurveyAssignment
+            var assignment = new SurveyAssignment
             {
                 Id = Guid.NewGuid(),
                 SurveyId = survey.Id,
                 UserId = user.Id,
                 IsCompleted = false
-            });
+            };
+            _surveyRepository.AddAssignment(assignment);
         }
     }
 

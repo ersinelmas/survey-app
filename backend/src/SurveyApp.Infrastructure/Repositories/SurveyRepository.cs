@@ -52,4 +52,24 @@ public class SurveyRepository : ISurveyRepository
             .Include(s => s.Assignments).ThenInclude(a => a.User)
             .FirstOrDefaultAsync(s => s.Id == id);
     }
+
+    public void RemoveSurveyQuestions(IEnumerable<SurveyQuestion> items)
+    {
+        _context.SurveyQuestions.RemoveRange(items);
+    }
+
+    public void AddSurveyQuestion(SurveyQuestion item)
+    {
+        _context.SurveyQuestions.Add(item);
+    }
+
+    public void RemoveAssignments(IEnumerable<SurveyAssignment> items)
+    {
+        _context.SurveyAssignments.RemoveRange(items);
+    }
+
+    public void AddAssignment(SurveyAssignment item)
+    {
+        _context.SurveyAssignments.Add(item);
+    }
 }
