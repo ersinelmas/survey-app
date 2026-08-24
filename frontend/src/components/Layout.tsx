@@ -20,13 +20,18 @@ function Layout({ children }: { children: ReactNode }) {
         <Box>
             <AppBar position="static">
                 <Toolbar sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <Typography
-                        variant="h6"
+                    <Box
                         onClick={handleHomeClick}
-                        sx={{ cursor: 'pointer' }}
+                        sx={{ display: 'flex', alignItems: 'center', gap: 1, cursor: 'pointer' }}
                     >
-                        Survey App
-                    </Typography>
+                        <Box
+                            component="img"
+                            src="/favicon.svg"
+                            alt="Survey App logo"
+                            sx={{ width: 28, height: 28, filter: 'brightness(0) invert(1)', }}
+                        />
+                        <Typography variant="h6">Survey App</Typography>
+                    </Box>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                         <Typography variant="body2">{email} ({role})</Typography>
                         <Button color="inherit" onClick={handleLogout}>

@@ -142,7 +142,7 @@ public class SurveyService
 
     private static void ValidateDates(DateTime startDate, DateTime endDate)
     {
-        if (endDate <= startDate)
+        if (endDate < startDate)
             throw new ArgumentException("Bitiş tarihi, başlangıç tarihinden sonra olmalıdır.");
     }
 

@@ -9,6 +9,28 @@ const theme = createTheme({
                 },
             },
         },
+        MuiPaper: {
+            styleOverrides: {
+                root: {
+                    backgroundImage: 'none',
+                },
+            },
+            defaultProps: {
+                elevation: 2,
+            },
+        },
+        MuiTableHead: {
+            styleOverrides: {
+                root: {
+                    backgroundColor: '#f4f6f8',
+                },
+            },
+        },
+    },
+    palette: {
+        background: {
+            default: '#f4f6f8',
+        },
     },
 });
 

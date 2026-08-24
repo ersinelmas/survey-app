@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import {
     Box, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
     Paper, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, TextField,
-    Typography, Autocomplete, Chip, Switch, FormControlLabel,
+    Typography, Autocomplete, Chip, Switch, FormControlLabel, Alert,
 } from '@mui/material';
 import { Add, Edit, Delete, Assessment } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
@@ -94,8 +94,8 @@ function SurveysPage() {
             const payload = {
                 title,
                 description,
-                startDate: new Date(startDate).toISOString(),
-                endDate: new Date(endDate).toISOString(),
+                startDate: new Date(startDate + 'T00:00:00').toISOString(),
+                endDate: new Date(endDate + 'T23:59:59').toISOString(),
                 isActive,
                 questionIds: selectedQuestions.map((q) => q.id),
                 assignedUserIds: selectedUsers.map((u) => u.id),
@@ -107,8 +107,9 @@ function SurveysPage() {
             }
             setDialogOpen(false);
             loadData();
-        } catch (err) {
-            setError('Kayıt sırasında bir hata oluştu. Tarihleri ve seçimleri kontrol edin.');
+        } catch (err: any) {
+            const message = err?.response?.data?.message || 'Kayıt sırasında bir hata oluştu.';
+            setError(message);
         } finally {
             setSaving(false);
         }
@@ -207,7 +208,10 @@ function SurveysPage() {
                         type="date"
                         fullWidth
                         margin="normal"
-                        slotProps={{ inputLabel: { shrink: true } }}
+                        slotProps={{
+                            inputLabel: { shrink: true },
+                            htmlInput: { min: startDate || undefined },
+                        }}
                         value={endDate}
                         onChange={(e) => setEndDate(e.target.value)}
                     />
@@ -238,9 +242,9 @@ function SurveysPage() {
                 </DialogContent>
                 <DialogActions sx={{ flexDirection: 'column', alignItems: 'stretch', px: 3, pb: 2 }}>
                     {error && (
-                        <Typography color="error" sx={{ mb: 1, textAlign: 'center' }}>
+                        <Alert severity="error" sx={{ mb: 1 }}>
                             {error}
-                        </Typography>
+                        </Alert>
                     )}
                     <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
                         <Button onClick={() => setDialogOpen(false)}>İptal</Button>

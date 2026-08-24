@@ -51,7 +51,7 @@ function SurveyReportPage() {
             </Button>
 
             <Typography variant="h5" sx={{ mb: 3 }}>
-                {report.title} — Raporu
+                {report.title} - Raporu
             </Typography>
 
             <Grid container spacing={2} sx={{ mb: 3 }}>
