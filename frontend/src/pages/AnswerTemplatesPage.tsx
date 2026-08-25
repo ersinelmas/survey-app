@@ -92,8 +92,12 @@ function AnswerTemplatesPage() {
 
     const handleDelete = async (id: string) => {
         if (!confirm('Bu cevap şablonunu silmek istediğinize emin misiniz?')) return;
-        await deleteAnswerTemplate(id);
-        loadTemplates();
+        try {
+            await deleteAnswerTemplate(id);
+            loadTemplates();
+        } catch (err: any) {
+            alert(err?.response?.data?.message || 'Silme işlemi başarısız oldu.');
+        }
     };
 
     return (

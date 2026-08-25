@@ -77,6 +77,10 @@ public class QuestionService
         if (question is null)
             throw new KeyNotFoundException("Soru bulunamadı.");
 
+        var isUsed = await _questionRepository.IsUsedInAnySurveyAsync(id);
+        if (isUsed)
+            throw new InvalidOperationException("Bu soru bir veya daha fazla ankette kullanılıyor, silinemez. Önce ilgili anketlerden çıkarın.");
+
         _questionRepository.Remove(question);
         await _questionRepository.SaveChangesAsync();
     }

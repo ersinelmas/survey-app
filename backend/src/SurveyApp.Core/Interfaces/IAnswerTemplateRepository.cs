@@ -10,4 +10,5 @@ public interface IAnswerTemplateRepository
     void Remove(AnswerTemplate template);
     Task SaveChangesAsync();
     void AddOption(AnswerOption option);
+    Task<bool> IsUsedInAnyQuestionAsync(Guid templateId);
 }

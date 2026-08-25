@@ -42,4 +42,9 @@ public class QuestionRepository : IQuestionRepository
     {
         await _context.SaveChangesAsync();
     }
+
+    public async Task<bool> IsUsedInAnySurveyAsync(Guid questionId)
+    {
+        return await _context.SurveyQuestions.AnyAsync(sq => sq.QuestionId == questionId);
+    }
 }

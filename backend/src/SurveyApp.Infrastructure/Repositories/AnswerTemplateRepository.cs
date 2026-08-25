@@ -47,4 +47,9 @@ public class AnswerTemplateRepository : IAnswerTemplateRepository
     {
         _context.AnswerOptions.Add(option);
     }
+
+    public async Task<bool> IsUsedInAnyQuestionAsync(Guid templateId)
+    {
+        return await _context.Questions.AnyAsync(q => q.AnswerTemplateId == templateId);
+    }
 }

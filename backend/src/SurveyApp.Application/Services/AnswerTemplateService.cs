@@ -104,6 +104,10 @@ public class AnswerTemplateService
         if (template is null)
             throw new KeyNotFoundException("Cevap şablonu bulunamadı.");
 
+        var isUsed = await _repository.IsUsedInAnyQuestionAsync(id);
+        if (isUsed)
+            throw new InvalidOperationException("Bu cevap şablonu bir veya daha fazla soruda kullanılıyor, silinemez. Önce ilgili soruları güncelleyin veya silin.");
+
         _repository.Remove(template);
         await _repository.SaveChangesAsync();
     }

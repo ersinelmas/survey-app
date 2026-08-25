@@ -9,4 +9,5 @@ public interface IQuestionRepository
     Task AddAsync(Question question);
     void Remove(Question question);
     Task SaveChangesAsync();
+    Task<bool> IsUsedInAnySurveyAsync(Guid questionId);
 }

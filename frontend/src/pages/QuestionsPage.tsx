@@ -75,8 +75,12 @@ function QuestionsPage() {
 
     const handleDelete = async (id: string) => {
         if (!confirm('Bu soruyu silmek istediğinize emin misiniz?')) return;
-        await deleteQuestion(id);
-        loadData();
+        try {
+            await deleteQuestion(id);
+            loadData();
+        } catch (err: any) {
+            alert(err?.response?.data?.message || 'Silme işlemi başarısız oldu.');
+        }
     };
 
     return (
