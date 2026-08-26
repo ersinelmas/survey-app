@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Box, Button, TextField, Typography, Alert, Paper } from '@mui/material';
+import { Box, Button, TextField, Typography, Alert, Paper, Divider } from '@mui/material';
 import { useAuth } from '../context/AuthContext';
 
 function LoginPage() {
@@ -31,7 +31,16 @@ function LoginPage() {
             }}
         >
             <Paper elevation={3} sx={{ padding: 4, width: 350 }}>
-                <Typography variant="h5" sx={{ mb: 2 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mb: 1 }}>
+                    <Box component="img" src="/favicon.svg" alt="Survey App logo" sx={{ width: 40, height: 40 }} />
+                    <Typography variant="h5" sx={{ fontWeight: 600, color: 'primary.main' }}>
+                        Survey App
+                    </Typography>
+                </Box>
+
+                <Divider sx={{ mb: 3 }} />
+
+                <Typography variant="h5" sx={{ mb: 2, fontWeight: 500 }}>
                     Giriş Yap
                 </Typography>
                 {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}

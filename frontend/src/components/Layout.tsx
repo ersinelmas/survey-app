@@ -1,4 +1,4 @@
-import { AppBar, Toolbar, Typography, Button, Box } from '@mui/material';
+import { AppBar, Toolbar, Typography, Button, Box, Avatar } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import type { ReactNode } from 'react';
 import { useAuth } from '../context/AuthContext';
@@ -16,6 +16,9 @@ function Layout({ children }: { children: ReactNode }) {
         navigate(role === 'Admin' ? '/admin' : '/my-surveys');
     };
 
+    const avatarLetter = email ? email.charAt(0).toUpperCase() : '?';
+    const avatarColor = role === 'Admin' ? '#e65100' : '#2e7d32';
+
     return (
         <Box>
             <AppBar position="static">
@@ -28,12 +31,25 @@ function Layout({ children }: { children: ReactNode }) {
                             component="img"
                             src="/favicon.svg"
                             alt="Survey App logo"
-                            sx={{ width: 28, height: 28, filter: 'brightness(0) invert(1)', }}
+                            sx={{ width: 28, height: 28, filter: 'brightness(0) invert(1)' }}
                         />
                         <Typography variant="h6">Survey App</Typography>
                     </Box>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <Typography variant="body2">{email} ({role})</Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Avatar
+                                sx={{
+                                    width: 32,
+                                    height: 32,
+                                    bgcolor: avatarColor,
+                                    fontSize: 14,
+                                    border: '1px solid white',
+                                }}
+                            >
+                                {avatarLetter}
+                            </Avatar>
+                            <Typography variant="body2">{email}</Typography>
+                        </Box>
                         <Button color="inherit" onClick={handleLogout}>
                             Çıkış Yap
                         </Button>

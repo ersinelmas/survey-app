@@ -10,6 +10,7 @@ Kullanıcıların anket oluşturmasına, yönetmesine ve cevaplamasına olanak t
 - PostgreSQL (Docker ile çalıştırılır)
 - JWT tabanlı kimlik doğrulama, rol bazlı yetkilendirme (Admin / User)
 - BCrypt ile şifre hashleme
+
 **Frontend**
 - React 18 + TypeScript (Vite)
 - Material-UI (MUI)
