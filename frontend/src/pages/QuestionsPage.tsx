@@ -10,6 +10,7 @@ import { getQuestions, createQuestion, updateQuestion, deleteQuestion } from '..
 import { getAnswerTemplates } from '../api/answerTemplateApi';
 import type { Question } from '../types/question';
 import type { AnswerTemplate } from '../types/answerTemplate';
+import { extractErrorMessage } from '../api/errorHelper';
 
 function QuestionsPage() {
     const [questions, setQuestions] = useState<Question[]>([]);
@@ -67,7 +68,7 @@ function QuestionsPage() {
             setDialogOpen(false);
             loadData();
         } catch (err) {
-            setError('Kayıt sırasında bir hata oluştu.');
+            setError(extractErrorMessage(err));
         } finally {
             setSaving(false);
         }
@@ -78,8 +79,8 @@ function QuestionsPage() {
         try {
             await deleteQuestion(id);
             loadData();
-        } catch (err: any) {
-            alert(err?.response?.data?.message || 'Silme işlemi başarısız oldu.');
+        } catch (err) {
+            alert(extractErrorMessage(err));
         }
     };
 

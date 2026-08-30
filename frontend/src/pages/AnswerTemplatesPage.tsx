@@ -10,6 +10,7 @@ import {
     getAnswerTemplates, createAnswerTemplate, updateAnswerTemplate, deleteAnswerTemplate,
 } from '../api/answerTemplateApi';
 import type { AnswerTemplate, UpdateAnswerOptionRequest } from '../types/answerTemplate';
+import { extractErrorMessage } from '../api/errorHelper';
 
 function AnswerTemplatesPage() {
     const [templates, setTemplates] = useState<AnswerTemplate[]>([]);
@@ -84,7 +85,7 @@ function AnswerTemplatesPage() {
             setDialogOpen(false);
             loadTemplates();
         } catch (err) {
-            setError('Kayıt sırasında bir hata oluştu.');
+            setError(extractErrorMessage(err));
         } finally {
             setSaving(false);
         }
@@ -95,8 +96,8 @@ function AnswerTemplatesPage() {
         try {
             await deleteAnswerTemplate(id);
             loadTemplates();
-        } catch (err: any) {
-            alert(err?.response?.data?.message || 'Silme işlemi başarısız oldu.');
+        } catch (err) {
+            alert(extractErrorMessage(err));
         }
     };
 

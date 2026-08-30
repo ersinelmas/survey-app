@@ -40,8 +40,6 @@ public class SurveyService
 
     public async Task<SurveyDto> CreateAsync(CreateSurveyRequest request)
     {
-        ValidateDates(request.StartDate, request.EndDate);
-
         var survey = new Survey
         {
             Id = Guid.NewGuid(),
@@ -58,13 +56,11 @@ public class SurveyService
         await _surveyRepository.AddAsync(survey);
         await _surveyRepository.SaveChangesAsync();
 
-        return await GetByIdAsync(survey.Id); // ilişkileri include edilmiş haliyle geri döndürmek için tekrar çekiyoruz
+        return await GetByIdAsync(survey.Id);
     }
 
     public async Task<SurveyDto> UpdateAsync(Guid id, UpdateSurveyRequest request)
     {
-        ValidateDates(request.StartDate, request.EndDate);
-
         var survey = await _surveyRepository.GetByIdAsync(id);
         if (survey is null)
             throw new KeyNotFoundException("Anket bulunamadı.");
@@ -138,12 +134,6 @@ public class SurveyService
             };
             _surveyRepository.AddAssignment(assignment);
         }
-    }
-
-    private static void ValidateDates(DateTime startDate, DateTime endDate)
-    {
-        if (endDate < startDate)
-            throw new ArgumentException("Bitiş tarihi, başlangıç tarihinden sonra olmalıdır.");
     }
 
     public async Task<SurveyReportDto> GetReportAsync(Guid surveyId)

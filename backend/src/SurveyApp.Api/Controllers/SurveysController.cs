@@ -50,10 +50,6 @@ public class SurveysController : ControllerBase
         {
             return NotFound(new { message = ex.Message });
         }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
     }
 
     [HttpPut("{id}")]
@@ -67,10 +63,6 @@ public class SurveysController : ControllerBase
         catch (KeyNotFoundException ex)
         {
             return NotFound(new { message = ex.Message });
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(new { message = ex.Message });
         }
     }
 

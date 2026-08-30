@@ -41,15 +41,8 @@ public class AnswerTemplatesController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create(CreateAnswerTemplateRequest request)
     {
-        try
-        {
-            var template = await _service.CreateAsync(request);
-            return CreatedAtAction(nameof(GetById), new { id = template.Id }, template);
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        var template = await _service.CreateAsync(request);
+        return CreatedAtAction(nameof(GetById), new { id = template.Id }, template);
     }
 
     [HttpPut("{id}")]
@@ -63,10 +56,6 @@ public class AnswerTemplatesController : ControllerBase
         catch (KeyNotFoundException ex)
         {
             return NotFound(new { message = ex.Message });
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(new { message = ex.Message });
         }
         catch (Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException)
         {

@@ -7,6 +7,7 @@ import {
 import Layout from '../components/Layout';
 import { getSurveyToFill, submitSurvey } from '../api/surveyFillingApi';
 import type { SurveyFillDetail } from '../types/surveyFilling';
+import { extractErrorMessage } from '../api/errorHelper';
 
 function FillSurveyPage() {
     const { surveyId } = useParams<{ surveyId: string }>();
@@ -53,7 +54,7 @@ function FillSurveyPage() {
             });
             navigate('/my-surveys');
         } catch (err) {
-            setError('Gönderim sırasında bir hata oluştu.');
+            setError(extractErrorMessage(err));
         } finally {
             setSubmitting(false);
         }

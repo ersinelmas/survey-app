@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Box, Button, TextField, Typography, Alert, Paper, Divider } from '@mui/material';
 import { useAuth } from '../context/AuthContext';
+import { extractErrorMessage } from '../api/errorHelper';
 
 function LoginPage() {
     const [email, setEmail] = useState('');
@@ -17,7 +18,7 @@ function LoginPage() {
             await login({ email, password });
             navigate('/');
         } catch (err) {
-            setError('Email veya şifre hatalı.');
+            setError(extractErrorMessage(err));
         }
     };
 

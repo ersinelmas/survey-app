@@ -13,6 +13,7 @@ import { getUsers } from '../api/userApi';
 import type { Survey } from '../types/survey';
 import type { Question } from '../types/question';
 import type { User } from '../types/user';
+import { extractErrorMessage } from '../api/errorHelper';
 
 function SurveysPage() {
     const navigate = useNavigate();
@@ -107,9 +108,8 @@ function SurveysPage() {
             }
             setDialogOpen(false);
             loadData();
-        } catch (err: any) {
-            const message = err?.response?.data?.message || 'Kayıt sırasında bir hata oluştu.';
-            setError(message);
+        } catch (err) {
+            setError(extractErrorMessage(err));
         } finally {
             setSaving(false);
         }

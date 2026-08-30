@@ -8,11 +8,15 @@ using SurveyApp.Infrastructure.Services;
 using SurveyApp.Application.Services;
 using SurveyApp.Core.Interfaces;
 using SurveyApp.Infrastructure.Repositories;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllers();
+builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddValidatorsFromAssemblyContaining<SurveyApp.Application.Validators.CreateAnswerTemplateRequestValidator>();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>

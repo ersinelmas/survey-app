@@ -30,9 +30,6 @@ public class AnswerTemplateService
 
     public async Task<AnswerTemplateDto> CreateAsync(CreateAnswerTemplateRequest request)
     {
-        if (request.Options.Count < 2 || request.Options.Count > 4)
-            throw new ArgumentException("Şık sayısı 2 ile 4 arasında olmalıdır.");
-
         var template = new AnswerTemplate
         {
             Id = Guid.NewGuid(),
@@ -53,22 +50,17 @@ public class AnswerTemplateService
 
     public async Task<AnswerTemplateDto> UpdateAsync(Guid id, UpdateAnswerTemplateRequest request)
     {
-        if (request.Options.Count < 2 || request.Options.Count > 4)
-            throw new ArgumentException("Şık sayısı 2 ile 4 arasında olmalıdır.");
-
         var template = await _repository.GetByIdAsync(id);
         if (template is null)
             throw new KeyNotFoundException("Cevap şablonu bulunamadı.");
 
         template.Name = request.Name;
 
-        // Gelen listede olmayan mevcut şıkları sil
         var incomingIds = request.Options.Where(o => o.Id.HasValue).Select(o => o.Id!.Value).ToHashSet();
         var toRemove = template.Options.Where(o => !incomingIds.Contains(o.Id)).ToList();
         foreach (var option in toRemove)
             template.Options.Remove(option);
 
-        // Gelen listeyi işle: Id varsa güncelle, yoksa yeni ekle
         foreach (var optionRequest in request.Options)
         {
             if (optionRequest.Id.HasValue)

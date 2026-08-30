@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Box, Button, TextField, Typography, Alert, Paper, Divider } from '@mui/material';
 import { useAuth } from '../context/AuthContext';
+import { extractErrorMessage } from '../api/errorHelper';
 
 function RegisterPage() {
     const [email, setEmail] = useState('');
@@ -17,7 +18,7 @@ function RegisterPage() {
             await register({ email, password });
             navigate('/');
         } catch (err) {
-            setError('Kayıt sırasında bir hata oluştu. Bu email zaten kayıtlı olabilir.');
+            setError(extractErrorMessage(err));
         }
     };
 
