@@ -13,7 +13,9 @@ public class UpdateSurveyRequestValidator : AbstractValidator<UpdateSurveyReques
 
         RuleFor(x => x.EndDate)
             .GreaterThanOrEqualTo(x => x.StartDate)
-            .WithMessage("Bitiş tarihi, başlangıç tarihinden önce olamaz.");
+            .WithMessage("Bitiş tarihi, başlangıç tarihinden önce olamaz.")
+            .GreaterThanOrEqualTo(_ => DateTime.UtcNow.Date)
+            .WithMessage("Bitiş tarihi bugünden önce olamaz.");
 
         RuleFor(x => x.QuestionIds)
             .NotEmpty().WithMessage("En az bir soru seçilmelidir.");

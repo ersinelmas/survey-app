@@ -17,6 +17,17 @@ import { useCrudPage } from '../hooks/useCrudPage';
 import { useSnackbar } from '../context/SnackbarContext';
 import { extractErrorMessage } from '../api/errorHelper';
 
+const today = new Date().toISOString().slice(0, 10);
+
+function getDateStatusLabel(survey: Survey): string | null {
+    const todayDate = new Date(today);
+    const end = new Date(survey.endDate.slice(0, 10));
+    const start = new Date(survey.startDate.slice(0, 10));
+    if (end < todayDate) return 'Süresi Doldu';
+    if (start > todayDate) return 'Başlamadı';
+    return null;
+}
+
 function SurveysPage() {
     const navigate = useNavigate();
     const { showError } = useSnackbar();
@@ -134,11 +145,21 @@ function SurveysPage() {
                                     {survey.startDate.slice(0, 10)} - {survey.endDate.slice(0, 10)}
                                 </TableCell>
                                 <TableCell>
-                                    <Chip
-                                        label={survey.isActive ? 'Aktif' : 'Pasif'}
-                                        color={survey.isActive ? 'success' : 'default'}
-                                        size="small"
-                                    />
+                                    <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                                        <Chip
+                                            label={survey.isActive ? 'Aktif' : 'Pasif'}
+                                            color={survey.isActive ? 'success' : 'default'}
+                                            size="small"
+                                        />
+                                        {getDateStatusLabel(survey) && (
+                                            <Chip
+                                                label={getDateStatusLabel(survey)}
+                                                color="warning"
+                                                variant="outlined"
+                                                size="small"
+                                            />
+                                        )}
+                                    </Box>
                                 </TableCell>
                                 <TableCell>
                                     {survey.questions.length} soru / {survey.assignedUsers.length} kullanıcı
@@ -184,7 +205,10 @@ function SurveysPage() {
                         type="date"
                         fullWidth
                         margin="normal"
-                        slotProps={{ inputLabel: { shrink: true } }}
+                        slotProps={{
+                            inputLabel: { shrink: true },
+                            htmlInput: { min: editingId ? undefined : today },
+                        }}
                         value={startDate}
                         onChange={(e) => setStartDate(e.target.value)}
                     />
@@ -195,7 +219,7 @@ function SurveysPage() {
                         margin="normal"
                         slotProps={{
                             inputLabel: { shrink: true },
-                            htmlInput: { min: startDate || undefined },
+                            htmlInput: { min: startDate > today ? startDate : today },
                         }}
                         value={endDate}
                         onChange={(e) => setEndDate(e.target.value)}
