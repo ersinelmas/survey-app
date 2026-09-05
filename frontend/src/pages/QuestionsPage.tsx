@@ -10,29 +10,23 @@ import { getQuestions, createQuestion, updateQuestion, deleteQuestion } from '..
 import { getAnswerTemplates } from '../api/answerTemplateApi';
 import type { Question } from '../types/question';
 import type { AnswerTemplate } from '../types/answerTemplate';
-import { extractErrorMessage } from '../api/errorHelper';
+import { useCrudPage } from '../hooks/useCrudPage';
 
 function QuestionsPage() {
-    const [questions, setQuestions] = useState<Question[]>([]);
+    const {
+        items: questions, dialogOpen, setDialogOpen, editingId, setEditingId,
+        error, setError, saving, handleDelete, runSave,
+    } = useCrudPage<Question>({
+        fetchAll: getQuestions,
+        remove: deleteQuestion,
+        deleteConfirmMessage: 'Bu soruyu silmek istediğinize emin misiniz?',
+    });
     const [templates, setTemplates] = useState<AnswerTemplate[]>([]);
-    const [dialogOpen, setDialogOpen] = useState(false);
-    const [editingId, setEditingId] = useState<string | null>(null);
     const [text, setText] = useState('');
     const [answerTemplateId, setAnswerTemplateId] = useState('');
-    const [error, setError] = useState('');
-    const [saving, setSaving] = useState(false);
-
-    const loadData = async () => {
-        const [questionsData, templatesData] = await Promise.all([
-            getQuestions(),
-            getAnswerTemplates(),
-        ]);
-        setQuestions(questionsData);
-        setTemplates(templatesData);
-    };
 
     useEffect(() => {
-        loadData();
+        getAnswerTemplates().then(setTemplates);
     }, []);
 
     const openCreateDialog = () => {
@@ -51,37 +45,18 @@ function QuestionsPage() {
         setDialogOpen(true);
     };
 
-    const handleSave = async () => {
-        if (saving) return;
+    const handleSave = () => {
         if (!answerTemplateId) {
             setError('Lütfen bir cevap şablonu seçin.');
             return;
         }
-        setSaving(true);
-        setError('');
-        try {
+        runSave(async () => {
             if (editingId) {
                 await updateQuestion(editingId, { text, answerTemplateId });
             } else {
                 await createQuestion({ text, answerTemplateId });
             }
-            setDialogOpen(false);
-            loadData();
-        } catch (err) {
-            setError(extractErrorMessage(err));
-        } finally {
-            setSaving(false);
-        }
-    };
-
-    const handleDelete = async (id: string) => {
-        if (!confirm('Bu soruyu silmek istediğinize emin misiniz?')) return;
-        try {
-            await deleteQuestion(id);
-            loadData();
-        } catch (err) {
-            alert(extractErrorMessage(err));
-        }
+        });
     };
 
     return (

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
     Box, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
     Paper, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, TextField,
@@ -10,27 +10,22 @@ import {
     getAnswerTemplates, createAnswerTemplate, updateAnswerTemplate, deleteAnswerTemplate,
 } from '../api/answerTemplateApi';
 import type { AnswerTemplate, UpdateAnswerOptionRequest } from '../types/answerTemplate';
-import { extractErrorMessage } from '../api/errorHelper';
+import { useCrudPage } from '../hooks/useCrudPage';
 
 function AnswerTemplatesPage() {
-    const [templates, setTemplates] = useState<AnswerTemplate[]>([]);
-    const [dialogOpen, setDialogOpen] = useState(false);
-    const [editingId, setEditingId] = useState<string | null>(null);
+    const {
+        items: templates, dialogOpen, setDialogOpen, editingId, setEditingId,
+        error, setError, saving, handleDelete, runSave,
+    } = useCrudPage<AnswerTemplate>({
+        fetchAll: getAnswerTemplates,
+        remove: deleteAnswerTemplate,
+        deleteConfirmMessage: 'Bu cevap şablonunu silmek istediğinize emin misiniz?',
+    });
     const [name, setName] = useState('');
     const [options, setOptions] = useState<UpdateAnswerOptionRequest[]>([
         { id: null, text: '', order: 1 },
         { id: null, text: '', order: 2 },
     ]);
-    const [error, setError] = useState('');
-
-    const loadTemplates = async () => {
-        const data = await getAnswerTemplates();
-        setTemplates(data);
-    };
-
-    useEffect(() => {
-        loadTemplates();
-    }, []);
 
     const openCreateDialog = () => {
         setEditingId(null);
@@ -67,13 +62,8 @@ function AnswerTemplatesPage() {
         setOptions(updated);
     };
 
-    const [saving, setSaving] = useState(false);
-
-    const handleSave = async () => {
-        if (saving) return;
-        setSaving(true);
-        setError('');
-        try {
+    const handleSave = () =>
+        runSave(async () => {
             if (editingId) {
                 await updateAnswerTemplate(editingId, { name, options });
             } else {
@@ -82,24 +72,7 @@ function AnswerTemplatesPage() {
                     options: options.map((o) => ({ text: o.text, order: o.order })),
                 });
             }
-            setDialogOpen(false);
-            loadTemplates();
-        } catch (err) {
-            setError(extractErrorMessage(err));
-        } finally {
-            setSaving(false);
-        }
-    };
-
-    const handleDelete = async (id: string) => {
-        if (!confirm('Bu cevap şablonunu silmek istediğinize emin misiniz?')) return;
-        try {
-            await deleteAnswerTemplate(id);
-            loadTemplates();
-        } catch (err) {
-            alert(extractErrorMessage(err));
-        }
-    };
+        });
 
     return (
         <Layout>

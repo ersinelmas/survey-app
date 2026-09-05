@@ -13,16 +13,21 @@ import { getUsers } from '../api/userApi';
 import type { Survey } from '../types/survey';
 import type { Question } from '../types/question';
 import type { User } from '../types/user';
-import { extractErrorMessage } from '../api/errorHelper';
+import { useCrudPage } from '../hooks/useCrudPage';
 
 function SurveysPage() {
     const navigate = useNavigate();
-    const [surveys, setSurveys] = useState<Survey[]>([]);
+    const {
+        items: surveys, dialogOpen, setDialogOpen, editingId, setEditingId,
+        error, setError, saving, handleDelete, runSave,
+    } = useCrudPage<Survey>({
+        fetchAll: getSurveys,
+        remove: deleteSurvey,
+        deleteConfirmMessage: 'Bu anketi silmek istediğinize emin misiniz?',
+    });
     const [questions, setQuestions] = useState<Question[]>([]);
     const [users, setUsers] = useState<User[]>([]);
 
-    const [dialogOpen, setDialogOpen] = useState(false);
-    const [editingId, setEditingId] = useState<string | null>(null);
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [startDate, setStartDate] = useState('');
@@ -30,22 +35,12 @@ function SurveysPage() {
     const [isActive, setIsActive] = useState(true);
     const [selectedQuestions, setSelectedQuestions] = useState<Question[]>([]);
     const [selectedUsers, setSelectedUsers] = useState<User[]>([]);
-    const [error, setError] = useState('');
-    const [saving, setSaving] = useState(false);
-
-    const loadData = async () => {
-        const [surveysData, questionsData, usersData] = await Promise.all([
-            getSurveys(),
-            getQuestions(),
-            getUsers('User'),
-        ]);
-        setSurveys(surveysData);
-        setQuestions(questionsData);
-        setUsers(usersData);
-    };
 
     useEffect(() => {
-        loadData();
+        Promise.all([getQuestions(), getUsers('User')]).then(([questionsData, usersData]) => {
+            setQuestions(questionsData);
+            setUsers(usersData);
+        });
     }, []);
 
     const openCreateDialog = () => {
@@ -83,15 +78,12 @@ function SurveysPage() {
         setDialogOpen(true);
     };
 
-    const handleSave = async () => {
-        if (saving) return;
+    const handleSave = () => {
         if (selectedQuestions.length === 0) {
             setError('En az bir soru seçmelisiniz.');
             return;
         }
-        setSaving(true);
-        setError('');
-        try {
+        runSave(async () => {
             const payload = {
                 title,
                 description,
@@ -106,19 +98,7 @@ function SurveysPage() {
             } else {
                 await createSurvey(payload);
             }
-            setDialogOpen(false);
-            loadData();
-        } catch (err) {
-            setError(extractErrorMessage(err));
-        } finally {
-            setSaving(false);
-        }
-    };
-
-    const handleDelete = async (id: string) => {
-        if (!confirm('Bu anketi silmek istediğinize emin misiniz?')) return;
-        await deleteSurvey(id);
-        loadData();
+        });
     };
 
     return (
