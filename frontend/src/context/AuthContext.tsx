@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, type ReactNode } from 'react';
-import { login as loginApi, register as registerApi } from '../api/authApi';
+import { login as loginApi, register as registerApi, logout as logoutApi } from '../api/authApi';
 import type { LoginRequest, RegisterRequest } from '../types/auth';
 
 interface AuthContextType {
@@ -21,16 +21,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const login = async (data: LoginRequest) => {
         const response = await loginApi(data);
-        saveAuth(response.token, response.email, response.role);
+        saveAuth(response.token, response.refreshToken, response.email, response.role);
     };
 
     const register = async (data: RegisterRequest) => {
         const response = await registerApi(data);
-        saveAuth(response.token, response.email, response.role);
+        saveAuth(response.token, response.refreshToken, response.email, response.role);
     };
 
-    const saveAuth = (newToken: string, newEmail: string, newRole: string) => {
+    const saveAuth = (newToken: string, newRefreshToken: string, newEmail: string, newRole: string) => {
         localStorage.setItem('token', newToken);
+        localStorage.setItem('refreshToken', newRefreshToken);
         localStorage.setItem('email', newEmail);
         localStorage.setItem('role', newRole);
         setToken(newToken);
@@ -38,13 +39,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setRole(newRole);
     };
 
-    const logout = () => {
+    const clearAuth = () => {
         localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
         localStorage.removeItem('email');
         localStorage.removeItem('role');
         setToken(null);
         setEmail(null);
         setRole(null);
+    };
+
+    const logout = () => {
+        const storedRefreshToken = localStorage.getItem('refreshToken');
+        if (storedRefreshToken) {
+            logoutApi(storedRefreshToken).catch(() => {
+                // Sunucuya ulaşılamasa bile kullanıcı için yerel oturum sonlandırılır.
+            });
+        }
+        clearAuth();
     };
 
     return (
