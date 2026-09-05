@@ -14,9 +14,12 @@ import type { Survey } from '../types/survey';
 import type { Question } from '../types/question';
 import type { User } from '../types/user';
 import { useCrudPage } from '../hooks/useCrudPage';
+import { useSnackbar } from '../context/SnackbarContext';
+import { extractErrorMessage } from '../api/errorHelper';
 
 function SurveysPage() {
     const navigate = useNavigate();
+    const { showError } = useSnackbar();
     const {
         items: surveys, dialogOpen, setDialogOpen, editingId, setEditingId,
         error, setError, saving, handleDelete, runSave,
@@ -37,11 +40,13 @@ function SurveysPage() {
     const [selectedUsers, setSelectedUsers] = useState<User[]>([]);
 
     useEffect(() => {
-        Promise.all([getQuestions(), getUsers('User')]).then(([questionsData, usersData]) => {
-            setQuestions(questionsData);
-            setUsers(usersData);
-        });
-    }, []);
+        Promise.all([getQuestions(), getUsers('User')])
+            .then(([questionsData, usersData]) => {
+                setQuestions(questionsData);
+                setUsers(usersData);
+            })
+            .catch((err) => showError(extractErrorMessage(err)));
+    }, [showError]);
 
     const openCreateDialog = () => {
         setEditingId(null);

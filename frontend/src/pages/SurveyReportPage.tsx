@@ -8,20 +8,23 @@ import { ArrowBack } from '@mui/icons-material';
 import Layout from '../components/Layout';
 import { getSurveyReport } from '../api/surveyApi';
 import type { SurveyReport } from '../types/survey';
+import { useSnackbar } from '../context/SnackbarContext';
+import { extractErrorMessage } from '../api/errorHelper';
 
 function SurveyReportPage() {
     const { surveyId } = useParams<{ surveyId: string }>();
     const navigate = useNavigate();
+    const { showError } = useSnackbar();
     const [report, setReport] = useState<SurveyReport | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         if (!surveyId) return;
-        getSurveyReport(surveyId).then((data) => {
-            setReport(data);
-            setLoading(false);
-        });
-    }, [surveyId]);
+        getSurveyReport(surveyId)
+            .then(setReport)
+            .catch((err) => showError(extractErrorMessage(err)))
+            .finally(() => setLoading(false));
+    }, [surveyId, showError]);
 
     if (loading) {
         return (

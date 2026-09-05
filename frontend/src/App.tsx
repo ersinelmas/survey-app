@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { SnackbarProvider } from './context/SnackbarContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -20,76 +21,78 @@ function HomeRedirect() {
 function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <HomeRedirect />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin"
-            element={
-              <ProtectedRoute requiredRole="Admin">
-                <AdminDashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/answer-templates"
-            element={
-              <ProtectedRoute requiredRole="Admin">
-                <AnswerTemplatesPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/questions"
-            element={
-              <ProtectedRoute requiredRole="Admin">
-                <QuestionsPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/surveys"
-            element={
-              <ProtectedRoute requiredRole="Admin">
-                <SurveysPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/my-surveys"
-            element={
-              <ProtectedRoute>
-                <UserDashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/my-surveys/:surveyId"
-            element={
-              <ProtectedRoute>
-                <FillSurveyPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/surveys/:surveyId/report"
-            element={
-              <ProtectedRoute requiredRole="Admin">
-                <SurveyReportPage />
-              </ProtectedRoute>
-            }
-          />
-        </Routes>
-      </AuthProvider>
+      <SnackbarProvider>
+        <AuthProvider>
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <HomeRedirect />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute requiredRole="Admin">
+                  <AdminDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/answer-templates"
+              element={
+                <ProtectedRoute requiredRole="Admin">
+                  <AnswerTemplatesPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/questions"
+              element={
+                <ProtectedRoute requiredRole="Admin">
+                  <QuestionsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/surveys"
+              element={
+                <ProtectedRoute requiredRole="Admin">
+                  <SurveysPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/my-surveys"
+              element={
+                <ProtectedRoute>
+                  <UserDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/my-surveys/:surveyId"
+              element={
+                <ProtectedRoute>
+                  <FillSurveyPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/surveys/:surveyId/report"
+              element={
+                <ProtectedRoute requiredRole="Admin">
+                  <SurveyReportPage />
+                </ProtectedRoute>
+              }
+            />
+          </Routes>
+        </AuthProvider>
+      </SnackbarProvider>
     </BrowserRouter>
   );
 }

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { extractErrorMessage } from '../api/errorHelper';
+import { useSnackbar } from '../context/SnackbarContext';
 
 interface UseCrudPageOptions<T> {
     fetchAll: () => Promise<T[]>;
@@ -8,6 +9,7 @@ interface UseCrudPageOptions<T> {
 }
 
 export function useCrudPage<T>({ fetchAll, remove, deleteConfirmMessage }: UseCrudPageOptions<T>) {
+    const { showError } = useSnackbar();
     const [items, setItems] = useState<T[]>([]);
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
@@ -15,9 +17,13 @@ export function useCrudPage<T>({ fetchAll, remove, deleteConfirmMessage }: UseCr
     const [saving, setSaving] = useState(false);
 
     const reload = useCallback(async () => {
-        const data = await fetchAll();
-        setItems(data);
-    }, [fetchAll]);
+        try {
+            const data = await fetchAll();
+            setItems(data);
+        } catch (err) {
+            showError(extractErrorMessage(err));
+        }
+    }, [fetchAll, showError]);
 
     useEffect(() => {
         reload();
@@ -29,7 +35,7 @@ export function useCrudPage<T>({ fetchAll, remove, deleteConfirmMessage }: UseCr
             await remove(id);
             await reload();
         } catch (err) {
-            alert(extractErrorMessage(err));
+            showError(extractErrorMessage(err));
         }
     };
 

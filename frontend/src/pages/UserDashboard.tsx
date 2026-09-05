@@ -6,18 +6,21 @@ import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { getMyActiveSurveys } from '../api/surveyFillingApi';
 import type { AssignedSurvey } from '../types/surveyFilling';
+import { useSnackbar } from '../context/SnackbarContext';
+import { extractErrorMessage } from '../api/errorHelper';
 
 function UserDashboard() {
     const navigate = useNavigate();
+    const { showError } = useSnackbar();
     const [surveys, setSurveys] = useState<AssignedSurvey[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        getMyActiveSurveys().then((data) => {
-            setSurveys(data);
-            setLoading(false);
-        });
-    }, []);
+        getMyActiveSurveys()
+            .then(setSurveys)
+            .catch((err) => showError(extractErrorMessage(err)))
+            .finally(() => setLoading(false));
+    }, [showError]);
 
     return (
         <Layout>

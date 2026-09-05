@@ -11,8 +11,11 @@ import { getAnswerTemplates } from '../api/answerTemplateApi';
 import type { Question } from '../types/question';
 import type { AnswerTemplate } from '../types/answerTemplate';
 import { useCrudPage } from '../hooks/useCrudPage';
+import { useSnackbar } from '../context/SnackbarContext';
+import { extractErrorMessage } from '../api/errorHelper';
 
 function QuestionsPage() {
+    const { showError } = useSnackbar();
     const {
         items: questions, dialogOpen, setDialogOpen, editingId, setEditingId,
         error, setError, saving, handleDelete, runSave,
@@ -26,8 +29,10 @@ function QuestionsPage() {
     const [answerTemplateId, setAnswerTemplateId] = useState('');
 
     useEffect(() => {
-        getAnswerTemplates().then(setTemplates);
-    }, []);
+        getAnswerTemplates()
+            .then(setTemplates)
+            .catch((err) => showError(extractErrorMessage(err)));
+    }, [showError]);
 
     const openCreateDialog = () => {
         setEditingId(null);
