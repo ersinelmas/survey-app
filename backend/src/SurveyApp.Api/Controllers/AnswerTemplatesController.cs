@@ -48,36 +48,16 @@ public class AnswerTemplatesController : ControllerBase
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(Guid id, UpdateAnswerTemplateRequest request)
     {
-        try
-        {
-            var template = await _service.UpdateAsync(id, request);
-            return Ok(template);
-        }
-        catch (KeyNotFoundException ex)
-        {
-            return NotFound(new { message = ex.Message });
-        }
-        catch (Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException)
-        {
-            return Conflict(new { message = "Bu kayıt başka bir işlem tarafından değiştirilmiş olabilir. Lütfen sayfayı yenileyip tekrar deneyin." });
-        }
+
+        var template = await _service.UpdateAsync(id, request);
+        return Ok(template);
+
     }
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        try
-        {
-            await _service.DeleteAsync(id);
-            return NoContent();
-        }
-        catch (KeyNotFoundException ex)
-        {
-            return NotFound(new { message = ex.Message });
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Conflict(new { message = ex.Message });
-        }
+        await _service.DeleteAsync(id);
+        return NoContent();
     }
 }

@@ -27,60 +27,28 @@ public class QuestionsController : ControllerBase
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(Guid id)
     {
-        try
-        {
-            var question = await _service.GetByIdAsync(id);
-            return Ok(question);
-        }
-        catch (KeyNotFoundException ex)
-        {
-            return NotFound(new { message = ex.Message });
-        }
+        var question = await _service.GetByIdAsync(id);
+        return Ok(question);
     }
 
     [HttpPost]
     public async Task<IActionResult> Create(CreateQuestionRequest request)
     {
-        try
-        {
-            var question = await _service.CreateAsync(request);
-            return CreatedAtAction(nameof(GetById), new { id = question.Id }, question);
-        }
-        catch (KeyNotFoundException ex)
-        {
-            return NotFound(new { message = ex.Message });
-        }
+        var question = await _service.CreateAsync(request);
+        return CreatedAtAction(nameof(GetById), new { id = question.Id }, question);
     }
 
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(Guid id, UpdateQuestionRequest request)
     {
-        try
-        {
-            var question = await _service.UpdateAsync(id, request);
-            return Ok(question);
-        }
-        catch (KeyNotFoundException ex)
-        {
-            return NotFound(new { message = ex.Message });
-        }
+        var question = await _service.UpdateAsync(id, request);
+        return Ok(question);
     }
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        try
-        {
-            await _service.DeleteAsync(id);
-            return NoContent();
-        }
-        catch (KeyNotFoundException ex)
-        {
-            return NotFound(new { message = ex.Message });
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Conflict(new { message = ex.Message });
-        }
+        await _service.DeleteAsync(id);
+        return NoContent();
     }
 }

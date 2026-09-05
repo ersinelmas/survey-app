@@ -35,42 +35,16 @@ public class SurveyFillingController : ControllerBase
     [HttpGet("{surveyId}")]
     public async Task<IActionResult> GetSurveyToFill(Guid surveyId)
     {
-        try
-        {
-            var userId = GetCurrentUserId();
-            var survey = await _service.GetSurveyToFillAsync(userId, surveyId);
-            return Ok(survey);
-        }
-        catch (KeyNotFoundException ex)
-        {
-            return NotFound(new { message = ex.Message });
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Conflict(new { message = ex.Message });
-        }
+        var userId = GetCurrentUserId();
+        var survey = await _service.GetSurveyToFillAsync(userId, surveyId);
+        return Ok(survey);
     }
 
     [HttpPost("{surveyId}/submit")]
     public async Task<IActionResult> Submit(Guid surveyId, SubmitSurveyRequest request)
     {
-        try
-        {
-            var userId = GetCurrentUserId();
-            await _service.SubmitAsync(userId, surveyId, request);
-            return Ok(new { message = "Anket başarıyla gönderildi." });
-        }
-        catch (KeyNotFoundException ex)
-        {
-            return NotFound(new { message = ex.Message });
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Conflict(new { message = ex.Message });
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        var userId = GetCurrentUserId();
+        await _service.SubmitAsync(userId, surveyId, request);
+        return Ok(new { message = "Anket başarıyla gönderildi." });
     }
 }
