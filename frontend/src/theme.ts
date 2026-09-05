@@ -70,7 +70,6 @@ const theme = createTheme({
                         fontWeight: 600,
                         fontSize: '0.8125rem',
                         letterSpacing: '0.02em',
-                        textTransform: 'uppercase',
                         color: ink,
                     },
                 },

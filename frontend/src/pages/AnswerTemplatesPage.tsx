@@ -91,9 +91,9 @@ function AnswerTemplatesPage() {
                     <Table>
                         <TableHead>
                             <TableRow>
-                                <TableCell>Ad</TableCell>
-                                <TableCell>Şıklar</TableCell>
-                                <TableCell align="right">İşlemler</TableCell>
+                                <TableCell>AD</TableCell>
+                                <TableCell>ŞIKLAR</TableCell>
+                                <TableCell align="right">İŞLEMLER</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>

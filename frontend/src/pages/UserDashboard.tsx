@@ -11,6 +11,7 @@ import type { AssignedSurvey } from '../types/surveyFilling';
 import { useSnackbar } from '../context/SnackbarContext';
 import { extractErrorMessage } from '../api/errorHelper';
 import { fontFamilyMono } from '../theme';
+import { formatDate } from '../utils/date';
 
 function daysUntil(endDate: string): number {
     const end = new Date(endDate.slice(0, 10) + 'T23:59:59');
@@ -65,7 +66,7 @@ function UserDashboard() {
                                         color={urgent ? 'warning' : 'default'}
                                         label={
                                             <span style={{ fontFamily: fontFamilyMono, fontSize: '0.75rem' }}>
-                                                {survey.endDate.slice(0, 10)} · {remaining >= 0 ? `${remaining} gün kaldı` : 'süre doldu'}
+                                                {formatDate(survey.endDate)} · {remaining >= 0 ? `${remaining} gün kaldı` : 'süre doldu'}
                                             </span>
                                         }
                                     />

@@ -81,9 +81,9 @@ function QuestionsPage() {
                     <Table>
                         <TableHead>
                             <TableRow>
-                                <TableCell>Soru Metni</TableCell>
-                                <TableCell>Cevap Şablonu</TableCell>
-                                <TableCell align="right">İşlemler</TableCell>
+                                <TableCell>SORU METNİ</TableCell>
+                                <TableCell>CEVAP ŞABLONU</TableCell>
+                                <TableCell align="right">İŞLEMLER</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>

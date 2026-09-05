@@ -18,6 +18,7 @@ import { useCrudPage } from '../hooks/useCrudPage';
 import { useSnackbar } from '../context/SnackbarContext';
 import { extractErrorMessage } from '../api/errorHelper';
 import { fontFamilyMono } from '../theme';
+import { formatDate } from '../utils/date';
 
 const today = new Date().toISOString().slice(0, 10);
 
@@ -105,8 +106,8 @@ function SurveysPage() {
             const payload = {
                 title,
                 description,
-                startDate: new Date(startDate + 'T00:00:00').toISOString(),
-                endDate: new Date(endDate + 'T23:59:59').toISOString(),
+                startDate: `${startDate}T00:00:00.000Z`,
+                endDate: `${endDate}T23:59:59.999Z`,
                 isActive,
                 questionIds: selectedQuestions.map((q) => q.id),
                 assignedUserIds: selectedUsers.map((u) => u.id),
@@ -135,11 +136,11 @@ function SurveysPage() {
                     <Table>
                         <TableHead>
                             <TableRow>
-                                <TableCell>Başlık</TableCell>
-                                <TableCell>Tarih Aralığı</TableCell>
-                                <TableCell>Durum</TableCell>
-                                <TableCell>Soru / Kullanıcı</TableCell>
-                                <TableCell align="right">İşlemler</TableCell>
+                                <TableCell>BAŞLIK</TableCell>
+                                <TableCell>TARİH ARALIĞI</TableCell>
+                                <TableCell>DURUM</TableCell>
+                                <TableCell>SORU / KULLANICI</TableCell>
+                                <TableCell align="right">İŞLEMLER</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
@@ -147,7 +148,7 @@ function SurveysPage() {
                                 <TableRow key={survey.id}>
                                     <TableCell>{survey.title}</TableCell>
                                     <TableCell sx={{ fontFamily: fontFamilyMono, fontSize: '0.8125rem' }}>
-                                        {survey.startDate.slice(0, 10)} - {survey.endDate.slice(0, 10)}
+                                        {formatDate(survey.startDate)} - {formatDate(survey.endDate)}
                                     </TableCell>
                                     <TableCell>
                                         <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
