@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import {
-    Box, Typography, Card, CardContent, CardActions, Button, Grid, Chip,
+    Typography, Card, CardContent, CardActions, Button, Grid, Chip,
 } from '@mui/material';
 import { EventAvailable } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
+import EmptyState from '../components/EmptyState';
 import { getMyActiveSurveys } from '../api/surveyFillingApi';
 import type { AssignedSurvey } from '../types/surveyFilling';
 import { useSnackbar } from '../context/SnackbarContext';
@@ -42,19 +43,7 @@ function UserDashboard() {
             {loading && <Typography color="text.secondary">Yükleniyor...</Typography>}
 
             {!loading && surveys.length === 0 && (
-                <Box
-                    sx={{
-                        border: '1px dashed',
-                        borderColor: 'divider',
-                        borderRadius: 1,
-                        p: 4,
-                        textAlign: 'center',
-                    }}
-                >
-                    <Typography color="text.secondary">
-                        Şu anda doldurmanız gereken bir anket bulunmuyor.
-                    </Typography>
-                </Box>
+                <EmptyState message="Şu anda doldurmanız gereken bir anket bulunmuyor." />
             )}
 
             <Grid container spacing={2}>

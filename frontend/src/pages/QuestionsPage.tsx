@@ -6,6 +6,7 @@ import {
 } from '@mui/material';
 import { Add, Edit, Delete } from '@mui/icons-material';
 import Layout from '../components/Layout';
+import EmptyState from '../components/EmptyState';
 import { getQuestions, createQuestion, updateQuestion, deleteQuestion } from '../api/questionApi';
 import { getAnswerTemplates } from '../api/answerTemplateApi';
 import type { Question } from '../types/question';
@@ -73,33 +74,37 @@ function QuestionsPage() {
                 </Button>
             </Box>
 
-            <TableContainer component={Paper}>
-                <Table>
-                    <TableHead>
-                        <TableRow>
-                            <TableCell>Soru Metni</TableCell>
-                            <TableCell>Cevap Şablonu</TableCell>
-                            <TableCell align="right">İşlemler</TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {questions.map((question) => (
-                            <TableRow key={question.id}>
-                                <TableCell>{question.text}</TableCell>
-                                <TableCell>{question.answerTemplateName}</TableCell>
-                                <TableCell align="right">
-                                    <IconButton onClick={() => openEditDialog(question)}>
-                                        <Edit fontSize="small" />
-                                    </IconButton>
-                                    <IconButton onClick={() => handleDelete(question.id)}>
-                                        <Delete fontSize="small" />
-                                    </IconButton>
-                                </TableCell>
+            {questions.length === 0 ? (
+                <EmptyState message="Henüz bir soru oluşturulmamış." />
+            ) : (
+                <TableContainer component={Paper}>
+                    <Table>
+                        <TableHead>
+                            <TableRow>
+                                <TableCell>Soru Metni</TableCell>
+                                <TableCell>Cevap Şablonu</TableCell>
+                                <TableCell align="right">İşlemler</TableCell>
                             </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </TableContainer>
+                        </TableHead>
+                        <TableBody>
+                            {questions.map((question) => (
+                                <TableRow key={question.id}>
+                                    <TableCell>{question.text}</TableCell>
+                                    <TableCell>{question.answerTemplateName}</TableCell>
+                                    <TableCell align="right">
+                                        <IconButton onClick={() => openEditDialog(question)}>
+                                            <Edit fontSize="small" />
+                                        </IconButton>
+                                        <IconButton onClick={() => handleDelete(question.id)}>
+                                            <Delete fontSize="small" />
+                                        </IconButton>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+            )}
 
             <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} fullWidth maxWidth="sm">
                 <DialogTitle>{editingId ? 'Soruyu Düzenle' : 'Yeni Soru'}</DialogTitle>

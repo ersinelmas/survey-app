@@ -6,6 +6,7 @@ import {
 } from '@mui/material';
 import { Add, Edit, Delete } from '@mui/icons-material';
 import Layout from '../components/Layout';
+import EmptyState from '../components/EmptyState';
 import {
     getAnswerTemplates, createAnswerTemplate, updateAnswerTemplate, deleteAnswerTemplate,
 } from '../api/answerTemplateApi';
@@ -83,39 +84,43 @@ function AnswerTemplatesPage() {
                 </Button>
             </Box>
 
-            <TableContainer component={Paper}>
-                <Table>
-                    <TableHead>
-                        <TableRow>
-                            <TableCell>Ad</TableCell>
-                            <TableCell>Şıklar</TableCell>
-                            <TableCell align="right">İşlemler</TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {templates.map((template) => (
-                            <TableRow key={template.id}>
-                                <TableCell>{template.name}</TableCell>
-                                <TableCell>
-                                    {template.options
-                                        .sort((a, b) => a.order - b.order)
-                                        .map((o) => (
-                                            <Chip key={o.id} label={o.text} size="small" sx={{ mr: 0.5 }} />
-                                        ))}
-                                </TableCell>
-                                <TableCell align="right">
-                                    <IconButton onClick={() => openEditDialog(template)}>
-                                        <Edit fontSize="small" />
-                                    </IconButton>
-                                    <IconButton onClick={() => handleDelete(template.id)}>
-                                        <Delete fontSize="small" />
-                                    </IconButton>
-                                </TableCell>
+            {templates.length === 0 ? (
+                <EmptyState message="Henüz bir cevap şablonu tanımlanmamış." />
+            ) : (
+                <TableContainer component={Paper}>
+                    <Table>
+                        <TableHead>
+                            <TableRow>
+                                <TableCell>Ad</TableCell>
+                                <TableCell>Şıklar</TableCell>
+                                <TableCell align="right">İşlemler</TableCell>
                             </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </TableContainer>
+                        </TableHead>
+                        <TableBody>
+                            {templates.map((template) => (
+                                <TableRow key={template.id}>
+                                    <TableCell>{template.name}</TableCell>
+                                    <TableCell>
+                                        {template.options
+                                            .sort((a, b) => a.order - b.order)
+                                            .map((o) => (
+                                                <Chip key={o.id} label={o.text} size="small" variant="outlined" sx={{ mr: 0.5 }} />
+                                            ))}
+                                    </TableCell>
+                                    <TableCell align="right">
+                                        <IconButton onClick={() => openEditDialog(template)}>
+                                            <Edit fontSize="small" />
+                                        </IconButton>
+                                        <IconButton onClick={() => handleDelete(template.id)}>
+                                            <Delete fontSize="small" />
+                                        </IconButton>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+            )}
 
             <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} fullWidth maxWidth="sm">
                 <DialogTitle>{editingId ? 'Şablonu Düzenle' : 'Yeni Şablon'}</DialogTitle>

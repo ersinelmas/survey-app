@@ -7,6 +7,7 @@ import {
 import { Add, Edit, Delete, Assessment } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
+import EmptyState from '../components/EmptyState';
 import { getSurveys, createSurvey, updateSurvey, deleteSurvey } from '../api/surveyApi';
 import { getQuestions } from '../api/questionApi';
 import { getUsers } from '../api/userApi';
@@ -16,6 +17,7 @@ import type { User } from '../types/user';
 import { useCrudPage } from '../hooks/useCrudPage';
 import { useSnackbar } from '../context/SnackbarContext';
 import { extractErrorMessage } from '../api/errorHelper';
+import { fontFamilyMono } from '../theme';
 
 const today = new Date().toISOString().slice(0, 10);
 
@@ -126,60 +128,64 @@ function SurveysPage() {
                 </Button>
             </Box>
 
-            <TableContainer component={Paper}>
-                <Table>
-                    <TableHead>
-                        <TableRow>
-                            <TableCell>Başlık</TableCell>
-                            <TableCell>Tarih Aralığı</TableCell>
-                            <TableCell>Durum</TableCell>
-                            <TableCell>Soru / Kullanıcı</TableCell>
-                            <TableCell align="right">İşlemler</TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {surveys.map((survey) => (
-                            <TableRow key={survey.id}>
-                                <TableCell>{survey.title}</TableCell>
-                                <TableCell>
-                                    {survey.startDate.slice(0, 10)} - {survey.endDate.slice(0, 10)}
-                                </TableCell>
-                                <TableCell>
-                                    <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                                        <Chip
-                                            label={survey.isActive ? 'Aktif' : 'Pasif'}
-                                            color={survey.isActive ? 'success' : 'default'}
-                                            size="small"
-                                        />
-                                        {getDateStatusLabel(survey) && (
+            {surveys.length === 0 ? (
+                <EmptyState message="Henüz bir anket oluşturulmamış." />
+            ) : (
+                <TableContainer component={Paper}>
+                    <Table>
+                        <TableHead>
+                            <TableRow>
+                                <TableCell>Başlık</TableCell>
+                                <TableCell>Tarih Aralığı</TableCell>
+                                <TableCell>Durum</TableCell>
+                                <TableCell>Soru / Kullanıcı</TableCell>
+                                <TableCell align="right">İşlemler</TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {surveys.map((survey) => (
+                                <TableRow key={survey.id}>
+                                    <TableCell>{survey.title}</TableCell>
+                                    <TableCell sx={{ fontFamily: fontFamilyMono, fontSize: '0.8125rem' }}>
+                                        {survey.startDate.slice(0, 10)} - {survey.endDate.slice(0, 10)}
+                                    </TableCell>
+                                    <TableCell>
+                                        <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
                                             <Chip
-                                                label={getDateStatusLabel(survey)}
-                                                color="warning"
-                                                variant="outlined"
+                                                label={survey.isActive ? 'Aktif' : 'Pasif'}
+                                                color={survey.isActive ? 'success' : 'default'}
                                                 size="small"
                                             />
-                                        )}
-                                    </Box>
-                                </TableCell>
-                                <TableCell>
-                                    {survey.questions.length} soru / {survey.assignedUsers.length} kullanıcı
-                                </TableCell>
-                                <TableCell align="right">
-                                    <IconButton onClick={() => navigate(`/admin/surveys/${survey.id}/report`)}>
-                                        <Assessment fontSize="small" />
-                                    </IconButton>
-                                    <IconButton onClick={() => openEditDialog(survey)}>
-                                        <Edit fontSize="small" />
-                                    </IconButton>
-                                    <IconButton onClick={() => handleDelete(survey.id)}>
-                                        <Delete fontSize="small" />
-                                    </IconButton>
-                                </TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </TableContainer>
+                                            {getDateStatusLabel(survey) && (
+                                                <Chip
+                                                    label={getDateStatusLabel(survey)}
+                                                    color="warning"
+                                                    variant="outlined"
+                                                    size="small"
+                                                />
+                                            )}
+                                        </Box>
+                                    </TableCell>
+                                    <TableCell>
+                                        {survey.questions.length} soru / {survey.assignedUsers.length} kullanıcı
+                                    </TableCell>
+                                    <TableCell align="right">
+                                        <IconButton onClick={() => navigate(`/admin/surveys/${survey.id}/report`)}>
+                                            <Assessment fontSize="small" />
+                                        </IconButton>
+                                        <IconButton onClick={() => openEditDialog(survey)}>
+                                            <Edit fontSize="small" />
+                                        </IconButton>
+                                        <IconButton onClick={() => handleDelete(survey.id)}>
+                                            <Delete fontSize="small" />
+                                        </IconButton>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+            )}
 
             <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} fullWidth maxWidth="sm">
                 <DialogTitle>{editingId ? 'Anketi Düzenle' : 'Yeni Anket'}</DialogTitle>

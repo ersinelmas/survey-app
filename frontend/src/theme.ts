@@ -83,6 +83,15 @@ const theme = createTheme({
                 },
             },
         },
+        MuiTableBody: {
+            styleOverrides: {
+                root: {
+                    '& .MuiTableRow-root:hover': {
+                        backgroundColor: '#F7F8FA',
+                    },
+                },
+            },
+        },
     },
 });
 
