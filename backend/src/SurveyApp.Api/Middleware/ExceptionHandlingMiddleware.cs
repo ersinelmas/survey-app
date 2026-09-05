@@ -38,10 +38,14 @@ public class ExceptionHandlingMiddleware
             _ => HttpStatusCode.InternalServerError
         };
 
+        var message = statusCode == HttpStatusCode.InternalServerError
+            ? "Sunucu tarafında beklenmeyen bir hata oluştu."
+            : exception.Message;
+
         context.Response.ContentType = "application/json";
         context.Response.StatusCode = (int)statusCode;
 
-        var response = new { message = exception.Message };
+        var response = new { message };
         return context.Response.WriteAsync(JsonSerializer.Serialize(response));
     }
 }
