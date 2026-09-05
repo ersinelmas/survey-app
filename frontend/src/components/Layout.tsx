@@ -17,7 +17,7 @@ function Layout({ children }: { children: ReactNode }) {
     };
 
     const avatarLetter = email ? email.charAt(0).toUpperCase() : '?';
-    const avatarColor = role === 'Admin' ? '#e65100' : '#2e7d32';
+    const avatarColor = role === 'Admin' ? '#C77A1F' : '#0F7A6C';
 
     return (
         <Box>
