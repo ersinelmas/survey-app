@@ -40,7 +40,12 @@ builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
-builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<AuthService>(sp => new AuthService(
+    sp.GetRequiredService<IUserRepository>(),
+    sp.GetRequiredService<IRefreshTokenRepository>(),
+    sp.GetRequiredService<IPasswordHasher>(),
+    sp.GetRequiredService<IJwtTokenGenerator>(),
+    int.Parse(builder.Configuration["Jwt:RefreshTokenExpiryDays"]!)));
 builder.Services.AddScoped<IAnswerTemplateRepository, AnswerTemplateRepository>();
 builder.Services.AddScoped<AnswerTemplateService>();
 builder.Services.AddScoped<IQuestionRepository, QuestionRepository>();
