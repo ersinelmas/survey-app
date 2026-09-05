@@ -35,7 +35,15 @@ Kullanıcıların anket oluşturmasına, yönetmesine ve cevaplamasına olanak t
 docker compose up -d
 ```
  
-### 2. Backend'i çalıştır
+### 2. Backend secrets'ını ayarla
+JWT imzalama anahtarı ve admin seed şifresi kod/appsettings içinde tutulmaz, User Secrets üzerinden okunur. İlk kurulumda bir kere ayarlanması gerekir:
+```bash
+cd backend/src/SurveyApp.Api
+dotnet user-secrets set "Jwt:Key" "<en az 32 karakterlik bir gizli anahtar>"
+dotnet user-secrets set "AdminSeed:Password" "<admin kullanıcı için bir şifre>"
+```
+
+### 3. Backend'i çalıştır
 ```bash
 cd backend
 dotnet ef database update --project src/SurveyApp.Infrastructure --startup-project src/SurveyApp.Api
@@ -44,9 +52,9 @@ dotnet run
 ```
 Backend `http://localhost:5092` üzerinde ayağa kalkar. Swagger arayüzü: `http://localhost:5092/swagger`
  
-Uygulama ilk açılışta otomatik olarak bir admin kullanıcı oluşturur (aşağıdaki giriş bilgilerine bakın).
+Uygulama ilk açılışta, `AdminSeed:Email` (appsettings.json, varsayılan `admin@surveyapp.com`) ve `AdminSeed:Password` (user secrets) ile otomatik bir admin kullanıcı oluşturur.
  
-### 3. Frontend'i çalıştır
+### 4. Frontend'i çalıştır
 ```bash
 cd frontend
 npm install
@@ -57,8 +65,8 @@ Frontend `http://localhost:5173` üzerinde ayağa kalkar.
 ## Giriş Bilgileri
  
 **Admin (otomatik oluşturulur):**
-- Email: `admin@surveyapp.com`
-- Şifre: `Admin123!`
+- Email: `admin@surveyapp.com` (appsettings.json → `AdminSeed:Email`)
+- Şifre: 2. adımda `AdminSeed:Password` için ayarladığınız değer
 **Normal kullanıcı:** `/register` sayfasından herhangi bir email/şifre ile kayıt olunabilir (varsayılan olarak `User` rolünde oluşturulur).
  
 ## Kullanım Akışı
@@ -88,7 +96,7 @@ frontend/
  
 ## Bilinen Sınırlamalar / Zaman Kısıtı Nedeniyle Basit Tutulan Noktalar
  
-- JWT secret key `appsettings.json`'da düz metin olarak tutuluyor; gerçek bir üretim ortamında environment variable veya bir secret manager (Azure Key Vault vb.) kullanılmalı.
+- JWT secret ve admin seed şifresi geliştirmede User Secrets ile tutuluyor; gerçek bir üretim ortamında bir secret manager (Azure Key Vault vb.) veya environment variable kullanılmalı.
 - Refresh token mekanizması yok; token süresi dolunca kullanıcı tekrar giriş yapmak zorunda.
 - Anket raporlama ekranında filtreleme/arama (proje şartında opsiyonel olarak belirtilmiş) eklenmedi, zaman kısıtı nedeniyle temel istatistiklerle sınırlı tutuldu.
 - Admin kullanıcı yönetimi (kullanıcı listeleme dışında ekleme/silme) ayrı bir ekran olarak sunulmadı; kullanıcılar `/register` üzerinden kendileri kayıt oluyor.

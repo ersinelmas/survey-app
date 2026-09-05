@@ -120,18 +120,28 @@ using (var scope = app.Services.CreateScope())
 
     if (!context.Users.Any(u => u.Role == SurveyApp.Core.Entities.UserRole.Admin))
     {
+        var adminEmail = builder.Configuration["AdminSeed:Email"];
+        var adminPassword = builder.Configuration["AdminSeed:Password"];
+
+        if (string.IsNullOrWhiteSpace(adminEmail) || string.IsNullOrWhiteSpace(adminPassword))
+        {
+            throw new InvalidOperationException(
+                "AdminSeed:Email ve AdminSeed:Password konfigürasyonu eksik. " +
+                "Geliştirme ortamında 'dotnet user-secrets set AdminSeed:Password <şifre>' ile ayarlayın.");
+        }
+
         var admin = new SurveyApp.Core.Entities.User
         {
             Id = Guid.NewGuid(),
-            Email = "admin@surveyapp.com",
-            PasswordHash = passwordHasher.Hash("Admin123!"),
+            Email = adminEmail,
+            PasswordHash = passwordHasher.Hash(adminPassword),
             Role = SurveyApp.Core.Entities.UserRole.Admin
         };
 
         context.Users.Add(admin);
         context.SaveChanges();
 
-        Console.WriteLine("Seed: Admin kullanıcı oluşturuldu -> admin@surveyapp.com / Admin123!");
+        Console.WriteLine($"Seed: Admin kullanıcı oluşturuldu -> {adminEmail}");
     }
 }
 
