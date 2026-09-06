@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
     Box, Typography, Paper, Table, TableBody, TableCell, TableContainer, TableHead,
-    TableRow, Chip, Grid, Button,
+    TableRow, Chip, Grid,
 } from '@mui/material';
-import { ArrowBack } from '@mui/icons-material';
 import Layout from '../components/Layout';
+import BackButton from '../components/BackButton';
 import CompletionRing from '../components/CompletionRing';
 import { getSurveyReport } from '../api/surveyApi';
 import type { SurveyReport } from '../types/survey';
@@ -51,9 +51,7 @@ function SurveyReportPage() {
 
     return (
         <Layout>
-            <Button startIcon={<ArrowBack />} onClick={() => navigate('/admin/surveys')} sx={{ mb: 2 }}>
-                Anketlere Dön
-            </Button>
+            <BackButton label="Anketlere Dön" onClick={() => navigate('/admin/surveys')} />
 
             <Typography variant="h5" sx={{ mb: 3 }}>
                 {report.title} - Raporu

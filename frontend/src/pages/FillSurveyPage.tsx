@@ -5,6 +5,7 @@ import {
     FormLabel, Button, Alert,
 } from '@mui/material';
 import Layout from '../components/Layout';
+import BackButton from '../components/BackButton';
 import { getSurveyToFill, submitSurvey } from '../api/surveyFillingApi';
 import type { SurveyFillDetail } from '../types/surveyFilling';
 import { extractErrorMessage } from '../api/errorHelper';
@@ -63,6 +64,7 @@ function FillSurveyPage() {
     if (loading) {
         return (
             <Layout>
+                <BackButton label="Anketlerime Dön" onClick={() => navigate('/my-surveys')} />
                 <Typography>Yükleniyor...</Typography>
             </Layout>
         );
@@ -71,6 +73,7 @@ function FillSurveyPage() {
     if (!survey) {
         return (
             <Layout>
+                <BackButton label="Anketlerime Dön" onClick={() => navigate('/my-surveys')} />
                 <Alert severity="error">{error || 'Anket bulunamadı.'}</Alert>
             </Layout>
         );
@@ -78,6 +81,7 @@ function FillSurveyPage() {
 
     return (
         <Layout>
+            <BackButton label="Anketlerime Dön" onClick={() => navigate('/my-surveys')} />
             <Typography variant="h5">{survey.title}</Typography>
             <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
                 {survey.description}
