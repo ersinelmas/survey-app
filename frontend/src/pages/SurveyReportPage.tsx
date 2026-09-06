@@ -6,10 +6,12 @@ import {
 } from '@mui/material';
 import { ArrowBack } from '@mui/icons-material';
 import Layout from '../components/Layout';
+import CompletionRing from '../components/CompletionRing';
 import { getSurveyReport } from '../api/surveyApi';
 import type { SurveyReport } from '../types/survey';
 import { useSnackbar } from '../context/SnackbarContext';
 import { extractErrorMessage } from '../api/errorHelper';
+import { fontFamilyMono } from '../theme';
 
 function SurveyReportPage() {
     const { surveyId } = useParams<{ surveyId: string }>();
@@ -57,26 +59,23 @@ function SurveyReportPage() {
                 {report.title} - Raporu
             </Typography>
 
-            <Grid container spacing={2} sx={{ mb: 3 }}>
-                <Grid size={{ xs: 12, sm: 4 }}>
-                    <Paper sx={{ p: 2, textAlign: 'center' }}>
-                        <Typography variant="h4">{report.totalAssigned}</Typography>
-                        <Typography variant="body2" color="text.secondary">Atanan Kullanıcı</Typography>
-                    </Paper>
-                </Grid>
-                <Grid size={{ xs: 12, sm: 4 }}>
-                    <Paper sx={{ p: 2, textAlign: 'center' }}>
-                        <Typography variant="h4">{report.totalCompleted}</Typography>
-                        <Typography variant="body2" color="text.secondary">Tamamlayan</Typography>
-                    </Paper>
-                </Grid>
-                <Grid size={{ xs: 12, sm: 4 }}>
-                    <Paper sx={{ p: 2, textAlign: 'center' }}>
-                        <Typography variant="h4">%{completionRate}</Typography>
-                        <Typography variant="body2" color="text.secondary">Tamamlanma Oranı</Typography>
-                    </Paper>
-                </Grid>
-            </Grid>
+            <Paper sx={{ p: 3, mb: 3, display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
+                <CompletionRing percent={completionRate} size={128} />
+                <Box sx={{ display: 'flex', gap: 5 }}>
+                    <Box>
+                        <Typography sx={{ fontFamily: fontFamilyMono, fontSize: '2rem', fontWeight: 600, lineHeight: 1 }}>
+                            {report.totalAssigned}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>Atanan Kullanıcı</Typography>
+                    </Box>
+                    <Box>
+                        <Typography sx={{ fontFamily: fontFamilyMono, fontSize: '2rem', fontWeight: 600, lineHeight: 1, color: 'secondary.main' }}>
+                            {report.totalCompleted}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>Tamamlayan</Typography>
+                    </Box>
+                </Box>
+            </Paper>
 
             <Grid container spacing={2} sx={{ mb: 3 }}>
                 <Grid size={{ xs: 12, sm: 6 }}>
@@ -88,9 +87,8 @@ function SurveyReportPage() {
                         <Chip
                             key={u.userId}
                             label={u.email}
-                            color="success"
                             size="small"
-                            sx={{ mr: 1, mb: 1 }}
+                            sx={{ mr: 1, mb: 1, bgcolor: 'secondary.main', color: '#fff' }}
                         />
                     ))}
                 </Grid>
@@ -112,16 +110,32 @@ function SurveyReportPage() {
             </Grid>
 
             <Typography variant="h6" sx={{ mb: 1 }}>Soru Bazında Cevaplar</Typography>
-            {report.questionSummaries.map((q) => (
+            {report.questionSummaries.map((q, index) => (
                 <TableContainer component={Paper} key={q.questionId} sx={{ mb: 2 }}>
-                    <Box sx={{ p: 2, pb: 0 }}>
-                        <Typography variant="subtitle1">{q.questionText}</Typography>
+                    <Box
+                        sx={{
+                            display: 'flex',
+                            alignItems: 'baseline',
+                            gap: 1.5,
+                            px: 2,
+                            py: 1.5,
+                            bgcolor: '#F0F2F5',
+                            borderBottom: '1px solid',
+                            borderColor: 'divider',
+                        }}
+                    >
+                        <Typography
+                            sx={{ fontFamily: fontFamilyMono, fontSize: '0.8125rem', color: 'text.secondary', flexShrink: 0 }}
+                        >
+                            {String(index + 1).padStart(2, '0')}
+                        </Typography>
+                        <Typography variant="h6" sx={{ fontSize: '1rem' }}>{q.questionText}</Typography>
                     </Box>
-                    <Table size="small">
+                    <Table size="small" sx={{ tableLayout: 'fixed' }}>
                         <TableHead>
                             <TableRow>
-                                <TableCell>Kullanıcı</TableCell>
-                                <TableCell>Cevap</TableCell>
+                                <TableCell sx={{ width: '50%' }}>KULLANICI</TableCell>
+                                <TableCell sx={{ width: '50%' }}>CEVAP</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
