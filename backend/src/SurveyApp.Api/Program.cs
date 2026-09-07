@@ -30,6 +30,9 @@ var cloudflareRanges = new[]
 string GetClientIp(HttpContext context)
 {
     var remoteIp = context.Connection.RemoteIpAddress;
+    if (remoteIp is not null && remoteIp.IsIPv4MappedToIPv6)
+        remoteIp = remoteIp.MapToIPv4();
+
     var requestFromCloudflare = remoteIp is not null && cloudflareRanges.Any(range => range.Contains(remoteIp));
 
     if (requestFromCloudflare)
