@@ -130,6 +130,8 @@ using (var scope = app.Services.CreateScope())
     var context = scope.ServiceProvider.GetRequiredService<SurveyDbContext>();
     var passwordHasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
 
+    context.Database.Migrate();
+
     if (!context.Users.Any(u => u.Role == SurveyApp.Core.Entities.UserRole.Admin))
     {
         var adminEmail = builder.Configuration["AdminSeed:Email"];
