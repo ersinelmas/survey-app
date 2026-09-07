@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const axiosInstance = axios.create({
-    baseURL: 'http://localhost:5092/api',
+    baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5092/api',
 });
 
 const AUTH_ENDPOINTS = ['/Auth/login', '/Auth/register', '/Auth/refresh'];
