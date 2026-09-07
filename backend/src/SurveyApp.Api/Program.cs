@@ -111,6 +111,8 @@ builder.Services.AddAuthorization(options =>
         policy.RequireRole("Admin")
               .RequireAssertion(ctx => ctx.User.FindFirst("IsSuperAdmin")?.Value == "true"));
 });
+builder.Services.AddSingleton<Microsoft.AspNetCore.Authorization.IAuthorizationMiddlewareResultHandler,
+    SurveyApp.Api.Middleware.CustomAuthorizationMiddlewareResultHandler>();
 
 builder.Services.AddRateLimiter(options =>
 {
