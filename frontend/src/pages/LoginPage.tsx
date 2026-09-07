@@ -72,6 +72,9 @@ function LoginPage() {
                 <Typography variant="body2" sx={{ mt: 2, textAlign: 'center' }}>
                     Hesabınız yok mu? <Link to="/register">Kayıt Ol</Link>
                 </Typography>
+                <Typography variant="caption" sx={{ mt: 2, display: 'block', textAlign: 'center', color: 'text.secondary' }}>
+                    <Link to="/privacy">Gizlilik Politikası</Link>
+                </Typography>
             </Paper>
         </Box>
     );

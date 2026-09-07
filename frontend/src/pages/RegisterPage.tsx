@@ -71,6 +71,9 @@ function RegisterPage() {
                 <Typography variant="body2" sx={{ mt: 2, textAlign: 'center' }}>
                     Zaten hesabınız var mı? <Link to="/login">Giriş Yap</Link>
                 </Typography>
+                <Typography variant="caption" sx={{ mt: 2, display: 'block', textAlign: 'center', color: 'text.secondary' }}>
+                    <Link to="/privacy">Gizlilik Politikası</Link>
+                </Typography>
             </Paper>
         </Box>
     );
