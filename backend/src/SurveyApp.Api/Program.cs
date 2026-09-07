@@ -105,7 +105,12 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("SuperAdmin", policy =>
+        policy.RequireRole("Admin")
+              .RequireAssertion(ctx => ctx.User.FindFirst("IsSuperAdmin")?.Value == "true"));
+});
 
 builder.Services.AddRateLimiter(options =>
 {
@@ -177,7 +182,7 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-// Seed initial admin user
+// Seed admin users
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<SurveyDbContext>();
@@ -185,31 +190,42 @@ using (var scope = app.Services.CreateScope())
 
     context.Database.Migrate();
 
-    if (!context.Users.Any(u => u.Role == SurveyApp.Core.Entities.UserRole.Admin))
+    void SeedAdmin(string configSection, bool isSuperAdmin, bool required)
     {
-        var adminEmail = builder.Configuration["AdminSeed:Email"];
-        var adminPassword = builder.Configuration["AdminSeed:Password"];
+        var email = builder.Configuration[$"{configSection}:Email"];
+        var password = builder.Configuration[$"{configSection}:Password"];
 
-        if (string.IsNullOrWhiteSpace(adminEmail) || string.IsNullOrWhiteSpace(adminPassword))
+        if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
         {
-            throw new InvalidOperationException(
-                "AdminSeed:Email ve AdminSeed:Password konfigürasyonu eksik. " +
-                "Geliştirme ortamında 'dotnet user-secrets set AdminSeed:Password <şifre>' ile ayarlayın.");
+            if (required)
+            {
+                throw new InvalidOperationException(
+                    $"{configSection}:Email ve {configSection}:Password konfigürasyonu eksik. " +
+                    $"Geliştirme ortamında 'dotnet user-secrets set {configSection}:Password <şifre>' ile ayarlayın.");
+            }
+            return;
         }
+
+        if (context.Users.Any(u => u.Email == email))
+            return;
 
         var admin = new SurveyApp.Core.Entities.User
         {
             Id = Guid.NewGuid(),
-            Email = adminEmail,
-            PasswordHash = passwordHasher.Hash(adminPassword),
-            Role = SurveyApp.Core.Entities.UserRole.Admin
+            Email = email,
+            PasswordHash = passwordHasher.Hash(password),
+            Role = SurveyApp.Core.Entities.UserRole.Admin,
+            IsSuperAdmin = isSuperAdmin
         };
 
         context.Users.Add(admin);
         context.SaveChanges();
 
-        Console.WriteLine($"Seed: Admin kullanıcı oluşturuldu -> {adminEmail}");
+        Console.WriteLine($"Seed: Admin kullanıcı oluşturuldu -> {email} (SuperAdmin: {isSuperAdmin})");
     }
+
+    SeedAdmin("AdminSeed", isSuperAdmin: false, required: true);
+    SeedAdmin("SuperAdminSeed", isSuperAdmin: true, required: false);
 }
 
 app.Run();

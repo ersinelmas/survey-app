@@ -46,6 +46,7 @@ public class QuestionsController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Policy = "SuperAdmin")]
     public async Task<IActionResult> Delete(Guid id)
     {
         await _service.DeleteAsync(id);
