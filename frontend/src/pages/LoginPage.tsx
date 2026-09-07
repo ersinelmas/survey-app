@@ -29,9 +29,10 @@ function LoginPage() {
                 justifyContent: 'center',
                 alignItems: 'center',
                 minHeight: '100vh',
+                px: 2,
             }}
         >
-            <Paper elevation={3} sx={{ padding: 4, width: 350 }}>
+            <Paper elevation={3} sx={{ padding: 4, width: '100%', maxWidth: 350 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mb: 1 }}>
                     <Box component="img" src="/favicon.svg" alt="Survey App logo" sx={{ width: 40, height: 40 }} />
                     <Typography variant="h5" sx={{ fontWeight: 600, color: 'primary.main' }}>
