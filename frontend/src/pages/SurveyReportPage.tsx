@@ -57,9 +57,9 @@ function SurveyReportPage() {
                 {report.title} - Raporu
             </Typography>
 
-            <Paper sx={{ p: 3, mb: 3, display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
+            <Paper sx={{ p: { xs: 2, sm: 3 }, mb: 3, display: 'flex', alignItems: 'center', gap: { xs: 2, sm: 4 }, flexWrap: 'wrap' }}>
                 <CompletionRing percent={completionRate} size={128} />
-                <Box sx={{ display: 'flex', gap: 5 }}>
+                <Box sx={{ display: 'flex', gap: { xs: 3, sm: 5 }, flexWrap: 'wrap' }}>
                     <Box>
                         <Typography sx={{ fontFamily: fontFamilyMono, fontSize: '2rem', fontWeight: 600, lineHeight: 1 }}>
                             {report.totalAssigned}
