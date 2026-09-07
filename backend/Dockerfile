@@ -13,6 +13,7 @@ RUN dotnet publish src/SurveyApp.Api/SurveyApp.Api.csproj -c Release -o /app/pub
 
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
-COPY --from=build /app/publish .
+COPY --from=build --chown=$APP_UID:$APP_UID /app/publish .
 
+USER $APP_UID
 ENTRYPOINT ["dotnet", "SurveyApp.Api.dll"]
