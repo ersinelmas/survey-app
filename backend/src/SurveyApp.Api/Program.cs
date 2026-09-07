@@ -172,6 +172,12 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseMiddleware<SurveyApp.Api.Middleware.ExceptionHandlingMiddleware>();
+app.UseMiddleware<SurveyApp.Api.Middleware.SecurityHeadersMiddleware>();
+
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHsts();
+}
 
 app.UseHttpsRedirection();
 
