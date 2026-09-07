@@ -32,21 +32,23 @@ function Layout({ children }: { children: ReactNode }) {
     return (
         <Box>
             <AppBar position="static">
-                <Toolbar sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                <Toolbar sx={{ display: 'flex', justifyContent: 'space-between', gap: 1, px: { xs: 1.5, sm: 2 } }}>
                     <Box
                         onClick={handleHomeClick}
-                        sx={{ display: 'flex', alignItems: 'center', gap: 1, cursor: 'pointer' }}
+                        sx={{ display: 'flex', alignItems: 'center', gap: 1, cursor: 'pointer', minWidth: 0 }}
                     >
                         <Box
                             component="img"
                             src="/favicon.svg"
                             alt="Survey App logo"
-                            sx={{ width: 28, height: 28, filter: 'brightness(0) invert(1)' }}
+                            sx={{ width: 28, height: 28, filter: 'brightness(0) invert(1)', flexShrink: 0 }}
                         />
-                        <Typography variant="h6">Survey App</Typography>
+                        <Typography variant="h6" noWrap sx={{ display: { xs: 'none', sm: 'block' } }}>
+                            Survey App
+                        </Typography>
                     </Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 2 } }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}>
                             <Avatar
                                 sx={{
                                     width: 32,
@@ -54,13 +56,20 @@ function Layout({ children }: { children: ReactNode }) {
                                     bgcolor: avatarColor,
                                     fontSize: 14,
                                     border: '1px solid white',
+                                    flexShrink: 0,
                                 }}
                             >
                                 {avatarLetter}
                             </Avatar>
-                            <Typography variant="body2">{email}</Typography>
+                            <Typography
+                                variant="body2"
+                                noWrap
+                                sx={{ display: { xs: 'none', sm: 'block' }, maxWidth: 200 }}
+                            >
+                                {email}
+                            </Typography>
                         </Box>
-                        <Button color="inherit" onClick={handleLogout}>
+                        <Button color="inherit" onClick={handleLogout} sx={{ px: { xs: 1, sm: 2 }, minWidth: 0 }}>
                             Çıkış Yap
                         </Button>
                     </Box>
@@ -89,7 +98,7 @@ function Layout({ children }: { children: ReactNode }) {
                     </Tabs>
                 )}
             </AppBar>
-            <Box sx={{ padding: 3 }}>{children}</Box>
+            <Box sx={{ padding: { xs: 2, sm: 3 } }}>{children}</Box>
         </Box>
     );
 }
