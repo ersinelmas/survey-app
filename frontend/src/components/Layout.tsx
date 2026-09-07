@@ -43,7 +43,7 @@ function Layout({ children }: { children: ReactNode }) {
                             alt="Survey App logo"
                             sx={{ width: 28, height: 28, filter: 'brightness(0) invert(1)', flexShrink: 0 }}
                         />
-                        <Typography variant="h6" noWrap sx={{ display: { xs: 'none', sm: 'block' } }}>
+                        <Typography variant="h6" noWrap sx={{ fontSize: { xs: '1.05rem', sm: '1.25rem' } }}>
                             Survey App
                         </Typography>
                     </Box>
