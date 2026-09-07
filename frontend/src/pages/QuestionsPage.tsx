@@ -67,7 +67,7 @@ function QuestionsPage() {
 
     return (
         <Layout>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', gap: 1, mb: 2 }}>
                 <Typography variant="h5">Sorular</Typography>
                 <Button variant="contained" startIcon={<Add />} onClick={openCreateDialog}>
                     Yeni Soru
@@ -78,7 +78,7 @@ function QuestionsPage() {
                 <EmptyState message="Henüz bir soru oluşturulmamış." />
             ) : (
                 <TableContainer component={Paper}>
-                    <Table>
+                    <Table sx={{ minWidth: 480 }}>
                         <TableHead>
                             <TableRow>
                                 <TableCell>SORU METNİ</TableCell>

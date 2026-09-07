@@ -77,7 +77,7 @@ function AnswerTemplatesPage() {
 
     return (
         <Layout>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', gap: 1, mb: 2 }}>
                 <Typography variant="h5">Cevap Şablonları</Typography>
                 <Button variant="contained" startIcon={<Add />} onClick={openCreateDialog}>
                     Yeni Şablon
@@ -88,7 +88,7 @@ function AnswerTemplatesPage() {
                 <EmptyState message="Henüz bir cevap şablonu tanımlanmamış." />
             ) : (
                 <TableContainer component={Paper}>
-                    <Table>
+                    <Table sx={{ minWidth: 480 }}>
                         <TableHead>
                             <TableRow>
                                 <TableCell>AD</TableCell>
