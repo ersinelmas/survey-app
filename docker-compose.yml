@@ -30,7 +30,7 @@ services:
       Cors__AllowedOrigins__0: ${FRONTEND_ORIGIN:-http://localhost:5173}
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
     ports:
-      - "5092:8080"
+      - "8080:8080"
 
 volumes:
   postgres_data:
