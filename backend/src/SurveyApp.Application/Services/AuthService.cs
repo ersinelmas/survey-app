@@ -8,6 +8,9 @@ namespace SurveyApp.Application.Services;
 
 public class AuthService
 {
+    private const int MaxFailedLoginAttempts = 5;
+    private static readonly TimeSpan LockoutDuration = TimeSpan.FromMinutes(15);
+
     private readonly IUserRepository _userRepository;
     private readonly IRefreshTokenRepository _refreshTokenRepository;
     private readonly IPasswordHasher _passwordHasher;
@@ -51,10 +54,38 @@ public class AuthService
     public async Task<AuthResponse> LoginAsync(LoginRequest request)
     {
         var user = await _userRepository.GetByEmailAsync(request.Email);
+
+        if (user is not null && user.LockedUntil is not null && user.LockedUntil > DateTime.UtcNow)
+            throw new UnauthorizedAccessException("Çok sayıda başarısız giriş denemesi nedeniyle hesabınız geçici olarak kilitlendi. Lütfen daha sonra tekrar deneyin.");
+
         if (user is null || !_passwordHasher.Verify(request.Password, user.PasswordHash))
+        {
+            if (user is not null)
+                await RegisterFailedLoginAsync(user);
+
             throw new UnauthorizedAccessException("Email veya şifre hatalı.");
+        }
+
+        if (user.FailedLoginAttempts > 0 || user.LockedUntil is not null)
+        {
+            user.FailedLoginAttempts = 0;
+            user.LockedUntil = null;
+            await _userRepository.SaveChangesAsync();
+        }
 
         return await IssueTokensAsync(user);
+    }
+
+    private async Task RegisterFailedLoginAsync(User user)
+    {
+        user.FailedLoginAttempts++;
+        if (user.FailedLoginAttempts >= MaxFailedLoginAttempts)
+        {
+            user.LockedUntil = DateTime.UtcNow.Add(LockoutDuration);
+            user.FailedLoginAttempts = 0;
+        }
+
+        await _userRepository.SaveChangesAsync();
     }
 
     public async Task<AuthResponse> RefreshAsync(RefreshRequest request)

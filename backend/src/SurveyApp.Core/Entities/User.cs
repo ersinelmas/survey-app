@@ -8,6 +8,8 @@ public class User
     public UserRole Role { get; set; }
     public bool IsSuperAdmin { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public int FailedLoginAttempts { get; set; }
+    public DateTime? LockedUntil { get; set; }
 }
 
 public enum UserRole
