@@ -235,6 +235,24 @@ public class SurveyFillingServiceTests
     }
 
     [Fact]
+    public async Task SubmitAsync_WhenAlreadyRespondedThroughAnotherChannel_MarksAssignmentCompletedAndThrows()
+    {
+        var survey = CreateActiveSurvey();
+        var question = CreateQuestionWithOptions(Guid.NewGuid());
+        survey.SurveyQuestions = new List<SurveyQuestion> { new() { SurveyId = survey.Id, QuestionId = question.Id, Question = question } };
+        var assignment = CreateAssignment(survey, Guid.NewGuid());
+        _assignmentRepository.Setup(r => r.GetByUserAndSurveyAsync(assignment.UserId, survey.Id)).ReturnsAsync(assignment);
+        _responseRepository.Setup(r => r.HasRespondedAsync(survey.Id, assignment.UserId, null)).ReturnsAsync(true);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(
+            () => _sut.SubmitAsync(assignment.UserId, survey.Id, new SubmitSurveyRequest()));
+
+        Assert.True(assignment.IsCompleted);
+        _assignmentRepository.Verify(r => r.SaveChangesAsync(), Times.Once);
+        _responseRepository.Verify(r => r.AddRangeAsync(It.IsAny<IEnumerable<SurveyResponse>>()), Times.Never);
+    }
+
+    [Fact]
     public async Task GetPublicSurveyAsync_WhenNotPublic_ThrowsKeyNotFoundException()
     {
         var survey = CreateActiveSurvey(isPublic: false);
@@ -346,5 +364,49 @@ public class SurveyFillingServiceTests
 
         _responseRepository.Verify(r => r.AddRangeAsync(It.Is<IEnumerable<SurveyResponse>>(
             responses => responses.Single().UserId == userId && responses.Single().RespondentToken == null)), Times.Once);
+    }
+
+    [Fact]
+    public async Task SubmitPublicAsync_WhenLoggedInUserHasMatchingAssignment_MarksAssignmentCompleted()
+    {
+        var survey = CreateActiveSurvey(isPublic: true);
+        var userId = Guid.NewGuid();
+        var selectedOptionId = Guid.NewGuid();
+        var question = CreateQuestionWithOptions(selectedOptionId, Guid.NewGuid());
+        survey.SurveyQuestions = new List<SurveyQuestion> { new() { SurveyId = survey.Id, QuestionId = question.Id, Question = question } };
+        _surveyRepository.Setup(r => r.GetByIdForFillingAsync(survey.Id)).ReturnsAsync(survey);
+
+        var assignment = CreateAssignment(survey, userId);
+        _assignmentRepository.Setup(r => r.GetByUserAndSurveyAsync(userId, survey.Id)).ReturnsAsync(assignment);
+
+        var request = new SubmitPublicSurveyRequest
+        {
+            Answers = new List<SubmitAnswerDto> { new() { QuestionId = question.Id, SelectedOptionId = selectedOptionId } },
+        };
+
+        await _sut.SubmitPublicAsync(survey.Id, userId, request);
+
+        Assert.True(assignment.IsCompleted);
+        Assert.NotNull(assignment.CompletedAt);
+    }
+
+    [Fact]
+    public async Task SubmitPublicAsync_WhenAnonymous_DoesNotTouchAssignments()
+    {
+        var survey = CreateActiveSurvey(isPublic: true);
+        var selectedOptionId = Guid.NewGuid();
+        var question = CreateQuestionWithOptions(selectedOptionId, Guid.NewGuid());
+        survey.SurveyQuestions = new List<SurveyQuestion> { new() { SurveyId = survey.Id, QuestionId = question.Id, Question = question } };
+        _surveyRepository.Setup(r => r.GetByIdForFillingAsync(survey.Id)).ReturnsAsync(survey);
+
+        var request = new SubmitPublicSurveyRequest
+        {
+            Answers = new List<SubmitAnswerDto> { new() { QuestionId = question.Id, SelectedOptionId = selectedOptionId } },
+            RespondentToken = "token-anon",
+        };
+
+        await _sut.SubmitPublicAsync(survey.Id, currentUserId: null, request);
+
+        _assignmentRepository.Verify(r => r.GetByUserAndSurveyAsync(It.IsAny<Guid>(), It.IsAny<Guid>()), Times.Never);
     }
 }

@@ -71,6 +71,15 @@ public class SurveyFillingService
         if (assignment.IsCompleted)
             throw new InvalidOperationException("Bu anketi zaten doldurdunuz.");
 
+        var alreadyRespondedElsewhere = await _responseRepository.HasRespondedAsync(surveyId, userId, respondentToken: null);
+        if (alreadyRespondedElsewhere)
+        {
+            assignment.IsCompleted = true;
+            assignment.CompletedAt = DateTime.UtcNow;
+            await _assignmentRepository.SaveChangesAsync();
+            throw new InvalidOperationException("Bu anketi zaten doldurdunuz.");
+        }
+
         ValidateAnswers(assignment.Survey.SurveyQuestions, request.Answers);
 
         var responses = request.Answers.Select(a => new SurveyResponse
@@ -153,6 +162,17 @@ public class SurveyFillingService
         });
 
         await _responseRepository.AddRangeAsync(responses);
+
+        if (currentUserId.HasValue)
+        {
+            var assignment = await _assignmentRepository.GetByUserAndSurveyAsync(currentUserId.Value, surveyId);
+            if (assignment is not null && !assignment.IsCompleted)
+            {
+                assignment.IsCompleted = true;
+                assignment.CompletedAt = DateTime.UtcNow;
+            }
+        }
+
         await _responseRepository.SaveChangesAsync();
     }
 
