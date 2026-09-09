@@ -167,12 +167,15 @@ public class SurveyService
         var completed = survey.Assignments.Where(a => a.IsCompleted).ToList();
         var pending = survey.Assignments.Where(a => !a.IsCompleted).ToList();
 
+        var currentQuestionIds = survey.SurveyQuestions.Select(sq => sq.QuestionId).ToHashSet();
+
         var questionSummaries = survey.SurveyQuestions
             .OrderBy(sq => sq.Order)
             .Select(sq => new QuestionResponseSummaryDto
             {
                 QuestionId = sq.QuestionId,
                 QuestionText = sq.Question.Text,
+                IsRemovedFromSurvey = false,
                 UserAnswers = responses
                     .Where(r => r.QuestionId == sq.QuestionId)
                     .Select(r => new UserAnswerDto
@@ -181,6 +184,23 @@ public class SurveyService
                         SelectedOptionText = r.SelectedOption.Text
                     }).ToList()
             }).ToList();
+
+        var removedQuestionSummaries = responses
+            .Where(r => !currentQuestionIds.Contains(r.QuestionId))
+            .GroupBy(r => r.QuestionId)
+            .Select(g => new QuestionResponseSummaryDto
+            {
+                QuestionId = g.Key,
+                QuestionText = g.First().Question.Text,
+                IsRemovedFromSurvey = true,
+                UserAnswers = g.Select(r => new UserAnswerDto
+                {
+                    UserEmail = r.User.Email,
+                    SelectedOptionText = r.SelectedOption.Text
+                }).ToList()
+            });
+
+        questionSummaries.AddRange(removedQuestionSummaries);
 
         return new SurveyReportDto
         {

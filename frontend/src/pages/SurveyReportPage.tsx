@@ -128,6 +128,9 @@ function SurveyReportPage() {
                             {String(index + 1).padStart(2, '0')}
                         </Typography>
                         <Typography variant="h6" sx={{ fontSize: '1rem' }}>{q.questionText}</Typography>
+                        {q.isRemovedFromSurvey && (
+                            <Chip label="Anketten çıkarıldı" size="small" color="warning" variant="outlined" />
+                        )}
                     </Box>
                     <Table size="small" sx={{ tableLayout: 'fixed' }}>
                         <TableHead>

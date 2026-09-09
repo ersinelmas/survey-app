@@ -7,4 +7,5 @@ public interface ISurveyResponseRepository
     Task AddRangeAsync(IEnumerable<SurveyResponse> responses);
     Task SaveChangesAsync();
     Task<List<SurveyResponse>> GetBySurveyIdAsync(Guid surveyId);
+    Task<bool> IsOptionUsedInAnyResponseAsync(Guid optionId);
 }

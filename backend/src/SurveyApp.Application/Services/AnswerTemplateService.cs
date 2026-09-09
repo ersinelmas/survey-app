@@ -8,10 +8,12 @@ namespace SurveyApp.Application.Services;
 public class AnswerTemplateService
 {
     private readonly IAnswerTemplateRepository _repository;
+    private readonly ISurveyResponseRepository _responseRepository;
 
-    public AnswerTemplateService(IAnswerTemplateRepository repository)
+    public AnswerTemplateService(IAnswerTemplateRepository repository, ISurveyResponseRepository responseRepository)
     {
         _repository = repository;
+        _responseRepository = responseRepository;
     }
 
     public async Task<List<AnswerTemplateDto>> GetAllAsync()
@@ -71,6 +73,14 @@ public class AnswerTemplateService
 
         var incomingIds = request.Options.Where(o => o.Id.HasValue).Select(o => o.Id!.Value).ToHashSet();
         var toRemove = template.Options.Where(o => !incomingIds.Contains(o.Id)).ToList();
+
+        foreach (var option in toRemove)
+        {
+            var isUsed = await _responseRepository.IsOptionUsedInAnyResponseAsync(option.Id);
+            if (isUsed)
+                throw new InvalidOperationException($"'{option.Text}' şıkkı en az bir ankette cevaplanmış, silinemez. Metnini güncelleyebilir veya yeni bir şık ekleyebilirsiniz.");
+        }
+
         foreach (var option in toRemove)
             template.Options.Remove(option);
 

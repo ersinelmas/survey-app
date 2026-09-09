@@ -42,6 +42,7 @@ export interface UserCompletion {
 export interface QuestionResponseSummary {
     questionId: string;
     questionText: string;
+    isRemovedFromSurvey: boolean;
     userAnswers: { userEmail: string; selectedOptionText: string }[];
 }
 

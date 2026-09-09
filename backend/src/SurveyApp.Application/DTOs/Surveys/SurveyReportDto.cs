@@ -22,6 +22,7 @@ public class QuestionResponseSummaryDto
 {
     public Guid QuestionId { get; set; }
     public string QuestionText { get; set; } = string.Empty;
+    public bool IsRemovedFromSurvey { get; set; }
     public List<UserAnswerDto> UserAnswers { get; set; } = new();
 }
 

@@ -244,6 +244,44 @@ public class SurveyServiceTests
         Assert.Single(report.QuestionSummaries);
         Assert.Single(report.QuestionSummaries[0].UserAnswers);
         Assert.Equal("Evet", report.QuestionSummaries[0].UserAnswers[0].SelectedOptionText);
+        Assert.False(report.QuestionSummaries[0].IsRemovedFromSurvey);
+    }
+
+    [Fact]
+    public async Task GetReportAsync_IncludesResponsesForQuestionRemovedFromSurvey()
+    {
+        var survey = CreateSurvey();
+        var currentQuestion = new Question { Id = Guid.NewGuid(), Text = "Güncel Soru" };
+        survey.SurveyQuestions = new List<SurveyQuestion>
+        {
+            new() { SurveyId = survey.Id, QuestionId = currentQuestion.Id, Question = currentQuestion, Order = 1 },
+        };
+        survey.Assignments = new List<SurveyAssignment>();
+
+        var removedQuestion = new Question { Id = Guid.NewGuid(), Text = "Anketten Çıkarılan Soru" };
+        var user = new User { Id = Guid.NewGuid(), Email = "user@user.com" };
+        var option = new AnswerOption { Id = Guid.NewGuid(), Text = "Evet" };
+        var responseForRemovedQuestion = new SurveyResponse
+        {
+            SurveyId = survey.Id,
+            UserId = user.Id,
+            User = user,
+            QuestionId = removedQuestion.Id,
+            Question = removedQuestion,
+            SelectedOptionId = option.Id,
+            SelectedOption = option,
+        };
+
+        _surveyRepository.Setup(r => r.GetByIdWithResponsesAsync(survey.Id)).ReturnsAsync(survey);
+        _responseRepository.Setup(r => r.GetBySurveyIdAsync(survey.Id)).ReturnsAsync(new List<SurveyResponse> { responseForRemovedQuestion });
+
+        var report = await _sut.GetReportAsync(survey.Id);
+
+        Assert.Equal(2, report.QuestionSummaries.Count);
+        var removedSummary = report.QuestionSummaries.Single(q => q.QuestionId == removedQuestion.Id);
+        Assert.True(removedSummary.IsRemovedFromSurvey);
+        Assert.Equal("Anketten Çıkarılan Soru", removedSummary.QuestionText);
+        Assert.Single(removedSummary.UserAnswers);
     }
 
     [Fact]
