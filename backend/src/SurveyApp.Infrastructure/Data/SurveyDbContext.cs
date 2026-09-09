@@ -31,6 +31,10 @@ public class SurveyDbContext : DbContext
             .HasIndex(rt => rt.Token)
             .IsUnique();
 
+        modelBuilder.Entity<AnswerOption>()
+            .HasIndex(o => new { o.AnswerTemplateId, o.Text })
+            .IsUnique();
+
         modelBuilder.Entity<SurveyAssignment>()
             .HasIndex(sa => new { sa.SurveyId, sa.UserId })
             .IsUnique();
