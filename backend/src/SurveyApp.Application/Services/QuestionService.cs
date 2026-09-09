@@ -9,13 +9,16 @@ public class QuestionService
 {
     private readonly IQuestionRepository _questionRepository;
     private readonly IAnswerTemplateRepository _answerTemplateRepository;
+    private readonly ISurveyResponseRepository _responseRepository;
 
     public QuestionService(
         IQuestionRepository questionRepository,
-        IAnswerTemplateRepository answerTemplateRepository)
+        IAnswerTemplateRepository answerTemplateRepository,
+        ISurveyResponseRepository responseRepository)
     {
         _questionRepository = questionRepository;
         _answerTemplateRepository = answerTemplateRepository;
+        _responseRepository = responseRepository;
     }
 
     public async Task<List<QuestionDto>> GetAllAsync()
@@ -74,6 +77,13 @@ public class QuestionService
         var template = await _answerTemplateRepository.GetByIdAsync(request.AnswerTemplateId);
         if (template is null)
             throw new KeyNotFoundException("Belirtilen cevap şablonu bulunamadı.");
+
+        if (question.AnswerTemplateId != request.AnswerTemplateId)
+        {
+            var isUsed = await _responseRepository.IsQuestionUsedInAnyResponseAsync(id);
+            if (isUsed)
+                throw new InvalidOperationException("Bu soru en az bir ankette cevaplanmış, cevap şablonu değiştirilemez.");
+        }
 
         question.Text = request.Text;
         question.AnswerTemplateId = request.AnswerTemplateId;

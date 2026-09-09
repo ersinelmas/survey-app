@@ -8,4 +8,5 @@ public interface ISurveyResponseRepository
     Task SaveChangesAsync();
     Task<List<SurveyResponse>> GetBySurveyIdAsync(Guid surveyId);
     Task<bool> IsOptionUsedInAnyResponseAsync(Guid optionId);
+    Task<bool> IsQuestionUsedInAnyResponseAsync(Guid questionId);
 }

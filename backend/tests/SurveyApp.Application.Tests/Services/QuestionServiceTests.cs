@@ -11,11 +11,13 @@ public class QuestionServiceTests
 {
     private readonly Mock<IQuestionRepository> _questionRepository = new();
     private readonly Mock<IAnswerTemplateRepository> _answerTemplateRepository = new();
+    private readonly Mock<ISurveyResponseRepository> _responseRepository = new();
     private readonly QuestionService _sut;
 
     public QuestionServiceTests()
     {
-        _sut = new QuestionService(_questionRepository.Object, _answerTemplateRepository.Object);
+        _sut = new QuestionService(_questionRepository.Object, _answerTemplateRepository.Object, _responseRepository.Object);
+        _responseRepository.Setup(r => r.IsQuestionUsedInAnyResponseAsync(It.IsAny<Guid>())).ReturnsAsync(false);
     }
 
     private static AnswerTemplate CreateTemplate(string name = "Memnuniyet") =>
@@ -116,6 +118,38 @@ public class QuestionServiceTests
         Assert.Equal("Yeni Metin", result.Text);
         Assert.Equal(newTemplate.Id, result.AnswerTemplateId);
         Assert.Equal(newTemplate.Name, result.AnswerTemplateName);
+        _questionRepository.Verify(r => r.SaveChangesAsync(), Times.Once);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_WhenChangingTemplateOnAlreadyAnsweredQuestion_ThrowsInvalidOperationException()
+    {
+        var oldTemplate = CreateTemplate("Eski Şablon");
+        var newTemplate = CreateTemplate("Yeni Şablon");
+        var question = CreateQuestion(oldTemplate, "Metin");
+        _questionRepository.Setup(r => r.GetByIdAsync(question.Id)).ReturnsAsync(question);
+        _answerTemplateRepository.Setup(r => r.GetByIdAsync(newTemplate.Id)).ReturnsAsync(newTemplate);
+        _responseRepository.Setup(r => r.IsQuestionUsedInAnyResponseAsync(question.Id)).ReturnsAsync(true);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(
+            () => _sut.UpdateAsync(question.Id, new UpdateQuestionRequest { Text = "Metin", AnswerTemplateId = newTemplate.Id }));
+
+        Assert.Equal(oldTemplate.Id, question.AnswerTemplateId);
+        _questionRepository.Verify(r => r.SaveChangesAsync(), Times.Never);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_WhenTemplateUnchangedOnAlreadyAnsweredQuestion_UpdatesTextAndSaves()
+    {
+        var template = CreateTemplate("Şablon");
+        var question = CreateQuestion(template, "Eski Metin");
+        _questionRepository.Setup(r => r.GetByIdAsync(question.Id)).ReturnsAsync(question);
+        _answerTemplateRepository.Setup(r => r.GetByIdAsync(template.Id)).ReturnsAsync(template);
+        _responseRepository.Setup(r => r.IsQuestionUsedInAnyResponseAsync(question.Id)).ReturnsAsync(true);
+
+        var result = await _sut.UpdateAsync(question.Id, new UpdateQuestionRequest { Text = "Yeni Metin", AnswerTemplateId = template.Id });
+
+        Assert.Equal("Yeni Metin", result.Text);
         _questionRepository.Verify(r => r.SaveChangesAsync(), Times.Once);
     }
 

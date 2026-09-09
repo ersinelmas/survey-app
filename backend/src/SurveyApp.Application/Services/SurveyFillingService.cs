@@ -81,14 +81,18 @@ public class SurveyFillingService
         if (assignment.IsCompleted)
             throw new InvalidOperationException("Bu anketi zaten doldurdunuz.");
 
-        var validQuestionIds = assignment.Survey.SurveyQuestions
-            .Select(sq => sq.QuestionId)
-            .ToHashSet();
+        var validOptionIdsByQuestionId = assignment.Survey.SurveyQuestions
+            .ToDictionary(sq => sq.QuestionId, sq => sq.Question.AnswerTemplate.Options.Select(o => o.Id).ToHashSet());
 
-        if (request.Answers.Count != validQuestionIds.Count
-            || !request.Answers.All(a => validQuestionIds.Contains(a.QuestionId)))
+        if (request.Answers.Count != validOptionIdsByQuestionId.Count
+            || !request.Answers.All(a => validOptionIdsByQuestionId.ContainsKey(a.QuestionId)))
         {
             throw new ArgumentException("Anketteki tüm sorular cevaplanmalıdır.");
+        }
+
+        if (request.Answers.Any(a => !validOptionIdsByQuestionId[a.QuestionId].Contains(a.SelectedOptionId)))
+        {
+            throw new ArgumentException("Seçilen şık, ilgili soruya ait değil.");
         }
 
         var responses = request.Answers.Select(a => new SurveyResponse

@@ -38,4 +38,9 @@ public class SurveyResponseRepository : ISurveyResponseRepository
     {
         return await _context.SurveyResponses.AnyAsync(r => r.SelectedOptionId == optionId);
     }
+
+    public async Task<bool> IsQuestionUsedInAnyResponseAsync(Guid questionId)
+    {
+        return await _context.SurveyResponses.AnyAsync(r => r.QuestionId == questionId);
+    }
 }

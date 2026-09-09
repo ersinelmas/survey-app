@@ -147,11 +147,21 @@ public class SurveyFillingServiceTests
             () => _sut.SubmitAsync(assignment.UserId, survey.Id, new SubmitSurveyRequest()));
     }
 
+    private static Question CreateQuestionWithOptions(params Guid[] optionIds)
+    {
+        var template = new AnswerTemplate
+        {
+            Id = Guid.NewGuid(),
+            Options = optionIds.Select((id, index) => new AnswerOption { Id = id, Text = $"Şık {index + 1}", Order = index + 1 }).ToList()
+        };
+        return new Question { Id = Guid.NewGuid(), Text = "Soru", AnswerTemplate = template };
+    }
+
     [Fact]
     public async Task SubmitAsync_WhenMissingAnswerForAQuestion_ThrowsArgumentException()
     {
         var survey = CreateActiveSurvey();
-        var question = new Question { Id = Guid.NewGuid(), Text = "Soru" };
+        var question = CreateQuestionWithOptions(Guid.NewGuid());
         survey.SurveyQuestions = new List<SurveyQuestion> { new() { SurveyId = survey.Id, QuestionId = question.Id, Question = question } };
         var assignment = CreateAssignment(survey, Guid.NewGuid());
         _assignmentRepository.Setup(r => r.GetByUserAndSurveyAsync(assignment.UserId, survey.Id)).ReturnsAsync(assignment);
@@ -164,7 +174,7 @@ public class SurveyFillingServiceTests
     public async Task SubmitAsync_WhenAnswerReferencesQuestionNotInSurvey_ThrowsArgumentException()
     {
         var survey = CreateActiveSurvey();
-        var question = new Question { Id = Guid.NewGuid(), Text = "Soru" };
+        var question = CreateQuestionWithOptions(Guid.NewGuid());
         survey.SurveyQuestions = new List<SurveyQuestion> { new() { SurveyId = survey.Id, QuestionId = question.Id, Question = question } };
         var assignment = CreateAssignment(survey, Guid.NewGuid());
         _assignmentRepository.Setup(r => r.GetByUserAndSurveyAsync(assignment.UserId, survey.Id)).ReturnsAsync(assignment);
@@ -178,15 +188,34 @@ public class SurveyFillingServiceTests
     }
 
     [Fact]
-    public async Task SubmitAsync_WhenValid_AddsResponsesMarksCompletedAndSaves()
+    public async Task SubmitAsync_WhenSelectedOptionDoesNotBelongToQuestion_ThrowsArgumentException()
     {
         var survey = CreateActiveSurvey();
-        var question = new Question { Id = Guid.NewGuid(), Text = "Soru" };
+        var question = CreateQuestionWithOptions(Guid.NewGuid());
         survey.SurveyQuestions = new List<SurveyQuestion> { new() { SurveyId = survey.Id, QuestionId = question.Id, Question = question } };
         var assignment = CreateAssignment(survey, Guid.NewGuid());
         _assignmentRepository.Setup(r => r.GetByUserAndSurveyAsync(assignment.UserId, survey.Id)).ReturnsAsync(assignment);
 
+        var request = new SubmitSurveyRequest
+        {
+            Answers = new List<SubmitAnswerDto> { new() { QuestionId = question.Id, SelectedOptionId = Guid.NewGuid() } }
+        };
+
+        await Assert.ThrowsAsync<ArgumentException>(() => _sut.SubmitAsync(assignment.UserId, survey.Id, request));
+
+        _responseRepository.Verify(r => r.AddRangeAsync(It.IsAny<IEnumerable<SurveyResponse>>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task SubmitAsync_WhenValid_AddsResponsesMarksCompletedAndSaves()
+    {
+        var survey = CreateActiveSurvey();
         var selectedOptionId = Guid.NewGuid();
+        var question = CreateQuestionWithOptions(selectedOptionId, Guid.NewGuid());
+        survey.SurveyQuestions = new List<SurveyQuestion> { new() { SurveyId = survey.Id, QuestionId = question.Id, Question = question } };
+        var assignment = CreateAssignment(survey, Guid.NewGuid());
+        _assignmentRepository.Setup(r => r.GetByUserAndSurveyAsync(assignment.UserId, survey.Id)).ReturnsAsync(assignment);
+
         var request = new SubmitSurveyRequest
         {
             Answers = new List<SubmitAnswerDto> { new() { QuestionId = question.Id, SelectedOptionId = selectedOptionId } }
