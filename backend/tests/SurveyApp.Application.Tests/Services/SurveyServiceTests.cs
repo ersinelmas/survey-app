@@ -124,6 +124,7 @@ public class SurveyServiceTests
         var question = new Question { Id = Guid.NewGuid(), Text = "Soru" };
         _surveyRepository.Setup(r => r.GetByIdAsync(survey.Id)).ReturnsAsync(survey);
         _questionRepository.Setup(r => r.GetByIdAsync(question.Id)).ReturnsAsync(question);
+        _responseRepository.Setup(r => r.GetBySurveyIdAsync(survey.Id)).ReturnsAsync(new List<SurveyResponse>());
 
         var request = new UpdateSurveyRequest
         {
@@ -138,6 +139,42 @@ public class SurveyServiceTests
             list => list.Count() == 1 && list.Single().UserId == droppedUser.Id)), Times.Once);
         _surveyRepository.Verify(r => r.AddAssignment(It.IsAny<SurveyAssignment>()), Times.Never);
         Assert.True(keptAssignment.IsCompleted);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_WhenReassigningUserWithPriorResponses_MarksNewAssignmentAsCompleted()
+    {
+        var survey = CreateSurvey();
+        survey.Assignments = new List<SurveyAssignment>();
+
+        var question = new Question { Id = Guid.NewGuid(), Text = "Soru" };
+        var reassignedUser = new User { Id = Guid.NewGuid(), Email = "reassigned@user.com" };
+        var lastAnsweredAt = DateTime.UtcNow.AddDays(-1);
+        var priorResponse = new SurveyResponse
+        {
+            SurveyId = survey.Id,
+            UserId = reassignedUser.Id,
+            QuestionId = question.Id,
+            SelectedOptionId = Guid.NewGuid(),
+            AnsweredAt = lastAnsweredAt,
+        };
+
+        _surveyRepository.Setup(r => r.GetByIdAsync(survey.Id)).ReturnsAsync(survey);
+        _questionRepository.Setup(r => r.GetByIdAsync(question.Id)).ReturnsAsync(question);
+        _userRepository.Setup(r => r.GetByIdAsync(reassignedUser.Id)).ReturnsAsync(reassignedUser);
+        _responseRepository.Setup(r => r.GetBySurveyIdAsync(survey.Id)).ReturnsAsync(new List<SurveyResponse> { priorResponse });
+
+        var request = new UpdateSurveyRequest
+        {
+            Title = "Güncellenmiş",
+            QuestionIds = new List<Guid> { question.Id },
+            AssignedUserIds = new List<Guid> { reassignedUser.Id },
+        };
+
+        await _sut.UpdateAsync(survey.Id, request);
+
+        _surveyRepository.Verify(r => r.AddAssignment(It.Is<SurveyAssignment>(
+            a => a.UserId == reassignedUser.Id && a.IsCompleted && a.CompletedAt == lastAnsweredAt)), Times.Once);
     }
 
     [Fact]

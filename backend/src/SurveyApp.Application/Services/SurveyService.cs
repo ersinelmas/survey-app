@@ -64,7 +64,7 @@ public class SurveyService
         };
 
         await AttachQuestions(survey, request.QuestionIds);
-        await AttachAssignments(survey, request.AssignedUserIds);
+        await AttachAssignments(survey, request.AssignedUserIds, new Dictionary<Guid, DateTime>());
 
         await _surveyRepository.AddAsync(survey);
         await _surveyRepository.SaveChangesAsync();
@@ -94,7 +94,11 @@ public class SurveyService
         _surveyRepository.RemoveAssignments(toRemove);
 
         var toAddUserIds = request.AssignedUserIds.Where(uid => !existingUserIds.Contains(uid)).ToList();
-        await AttachAssignments(survey, toAddUserIds);
+        var existingResponses = await _responseRepository.GetBySurveyIdAsync(survey.Id);
+        var lastAnsweredAtByUserId = existingResponses
+            .GroupBy(r => r.UserId)
+            .ToDictionary(g => g.Key, g => g.Max(r => r.AnsweredAt));
+        await AttachAssignments(survey, toAddUserIds, lastAnsweredAtByUserId);
 
         await _surveyRepository.SaveChangesAsync();
 
@@ -130,7 +134,7 @@ public class SurveyService
         }
     }
 
-    private async Task AttachAssignments(Survey survey, List<Guid> userIds)
+    private async Task AttachAssignments(Survey survey, List<Guid> userIds, IReadOnlyDictionary<Guid, DateTime> lastAnsweredAtByUserId)
     {
         foreach (var userId in userIds)
         {
@@ -138,12 +142,15 @@ public class SurveyService
             if (user is null)
                 throw new KeyNotFoundException($"Kullanıcı bulunamadı: {userId}");
 
+            var hasExistingResponses = lastAnsweredAtByUserId.TryGetValue(userId, out var lastAnsweredAt);
+
             var assignment = new SurveyAssignment
             {
                 Id = Guid.NewGuid(),
                 SurveyId = survey.Id,
                 UserId = user.Id,
-                IsCompleted = false
+                IsCompleted = hasExistingResponses,
+                CompletedAt = hasExistingResponses ? lastAnsweredAt : null
             };
             _surveyRepository.AddAssignment(assignment);
         }

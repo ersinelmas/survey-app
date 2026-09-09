@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
 
 namespace SurveyApp.Api.Middleware;
 
@@ -35,12 +36,16 @@ public class ExceptionHandlingMiddleware
             InvalidOperationException => HttpStatusCode.Conflict,
             ArgumentException => HttpStatusCode.BadRequest,
             UnauthorizedAccessException => HttpStatusCode.Unauthorized,
+            DbUpdateException => HttpStatusCode.Conflict,
             _ => HttpStatusCode.InternalServerError
         };
 
-        var message = statusCode == HttpStatusCode.InternalServerError
-            ? "Sunucu tarafında beklenmeyen bir hata oluştu."
-            : exception.Message;
+        var message = exception switch
+        {
+            DbUpdateException => "Bu işlem mevcut bir kayıtla çakışıyor.",
+            _ when statusCode == HttpStatusCode.InternalServerError => "Sunucu tarafında beklenmeyen bir hata oluştu.",
+            _ => exception.Message
+        };
 
         context.Response.ContentType = "application/json";
         context.Response.StatusCode = (int)statusCode;
