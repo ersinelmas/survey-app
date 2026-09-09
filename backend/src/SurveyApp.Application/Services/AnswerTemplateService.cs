@@ -162,6 +162,24 @@ public class AnswerTemplateService
         return MapToDto(copy, currentUserId);
     }
 
+    public async Task<AnswerTemplateDto> SetIsDefaultAsync(Guid id, bool isDefault, Guid currentUserId, bool isAdmin)
+    {
+        if (!isAdmin)
+            throw new ForbiddenAccessException("Bu işlem için yetkiniz yok.");
+
+        var template = await _repository.GetByIdAsync(id);
+        if (template is null)
+            throw new KeyNotFoundException("Cevap şablonu bulunamadı.");
+
+        if (!(template.OwnerId is null || template.OwnerId == currentUserId))
+            throw new ForbiddenAccessException("Başka bir kullanıcının içeriğini varsayılan yapamazsınız.");
+
+        template.OwnerId = isDefault ? null : currentUserId;
+        await _repository.SaveChangesAsync();
+
+        return MapToDto(template, currentUserId);
+    }
+
     private static bool IsVisibleTo(AnswerTemplate template, Guid userId) =>
         template.OwnerId is null || template.OwnerId == userId;
 

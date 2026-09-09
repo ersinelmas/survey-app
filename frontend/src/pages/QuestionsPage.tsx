@@ -4,10 +4,12 @@ import {
     Paper, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, TextField,
     Typography, MenuItem, TablePagination, Chip,
 } from '@mui/material';
-import { Add, Edit, Delete, ContentCopy } from '@mui/icons-material';
+import { Add, Edit, Delete, ContentCopy, Public, PublicOff } from '@mui/icons-material';
 import Layout from '../components/Layout';
 import EmptyState from '../components/EmptyState';
-import { getQuestionsPaged, createQuestion, updateQuestion, deleteQuestion, duplicateQuestion } from '../api/questionApi';
+import {
+    getQuestionsPaged, createQuestion, updateQuestion, deleteQuestion, duplicateQuestion, setQuestionIsDefault,
+} from '../api/questionApi';
 import { getAnswerTemplates } from '../api/answerTemplateApi';
 import type { Question } from '../types/question';
 import type { AnswerTemplate } from '../types/answerTemplate';
@@ -36,6 +38,15 @@ function QuestionsPage() {
     const handleDuplicate = async (id: string) => {
         try {
             await duplicateQuestion(id);
+            await reload();
+        } catch (err) {
+            showError(extractErrorMessage(err));
+        }
+    };
+
+    const handleSetIsDefault = async (id: string, isDefault: boolean) => {
+        try {
+            await setQuestionIsDefault(id, isDefault);
             await reload();
         } catch (err) {
             showError(extractErrorMessage(err));
@@ -110,6 +121,14 @@ function QuestionsPage() {
                                     </TableCell>
                                     <TableCell>{question.answerTemplateName}</TableCell>
                                     <TableCell align="right">
+                                        {isAdmin && (question.isMine || question.isDefault) && (
+                                            <IconButton
+                                                onClick={() => handleSetIsDefault(question.id, !question.isDefault)}
+                                                title={question.isDefault ? 'Varsayılanlıktan çıkar' : 'Varsayılan yap'}
+                                            >
+                                                {question.isDefault ? <PublicOff fontSize="small" /> : <Public fontSize="small" />}
+                                            </IconButton>
+                                        )}
                                         {canModify(question) ? (
                                             <>
                                                 <IconButton onClick={() => openEditDialog(question)}>

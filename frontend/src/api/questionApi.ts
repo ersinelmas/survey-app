@@ -32,3 +32,8 @@ export const duplicateQuestion = async (id: string): Promise<Question> => {
     const response = await axiosInstance.post<Question>(`/Questions/${id}/duplicate`);
     return response.data;
 };
+
+export const setQuestionIsDefault = async (id: string, isDefault: boolean): Promise<Question> => {
+    const response = await axiosInstance.put<Question>(`/Questions/${id}/default`, { isDefault });
+    return response.data;
+};

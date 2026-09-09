@@ -264,6 +264,35 @@ public class QuestionServiceTests
     }
 
     [Fact]
+    public async Task SetIsDefaultAsync_WhenCallerNotAdmin_ThrowsForbiddenAccessException()
+    {
+        await Assert.ThrowsAsync<ForbiddenAccessException>(
+            () => _sut.SetIsDefaultAsync(Guid.NewGuid(), true, _ownerId, isAdmin: false));
+    }
+
+    [Fact]
+    public async Task SetIsDefaultAsync_WhenPublishingOwnQuestion_SetsOwnerIdToNull()
+    {
+        var question = CreateQuestion(CreateTemplate(_ownerId), _ownerId);
+        _questionRepository.Setup(r => r.GetByIdAsync(question.Id)).ReturnsAsync(question);
+
+        var result = await _sut.SetIsDefaultAsync(question.Id, true, _ownerId, isAdmin: true);
+
+        Assert.True(result.IsDefault);
+        Assert.Null(question.OwnerId);
+    }
+
+    [Fact]
+    public async Task SetIsDefaultAsync_WhenQuestionOwnedByAnotherUser_ThrowsForbiddenAccessException()
+    {
+        var question = CreateQuestion(CreateTemplate(_ownerId), _otherUserId);
+        _questionRepository.Setup(r => r.GetByIdAsync(question.Id)).ReturnsAsync(question);
+
+        await Assert.ThrowsAsync<ForbiddenAccessException>(
+            () => _sut.SetIsDefaultAsync(question.Id, true, _ownerId, isAdmin: true));
+    }
+
+    [Fact]
     public async Task GetPagedAsync_ReturnsMappedPagedResult()
     {
         var question = CreateQuestion(CreateTemplate(_ownerId), _ownerId);

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SurveyApp.Api.Extensions;
 using SurveyApp.Application.DTOs.AnswerTemplates;
+using SurveyApp.Application.DTOs.Common;
 using SurveyApp.Application.Services;
 
 namespace SurveyApp.Api.Controllers;
@@ -71,5 +72,13 @@ public class AnswerTemplatesController : ControllerBase
     {
         var copy = await _service.DuplicateAsync(id, User.GetUserId());
         return CreatedAtAction(nameof(GetById), new { id = copy.Id }, copy);
+    }
+
+    [HttpPut("{id}/default")]
+    [Authorize(Policy = "Admin")]
+    public async Task<IActionResult> SetIsDefault(Guid id, SetIsDefaultRequest request)
+    {
+        var template = await _service.SetIsDefaultAsync(id, request.IsDefault, User.GetUserId(), User.IsAdmin());
+        return Ok(template);
     }
 }

@@ -274,6 +274,50 @@ public class AnswerTemplateServiceTests
     }
 
     [Fact]
+    public async Task SetIsDefaultAsync_WhenCallerNotAdmin_ThrowsForbiddenAccessException()
+    {
+        await Assert.ThrowsAsync<ForbiddenAccessException>(
+            () => _sut.SetIsDefaultAsync(Guid.NewGuid(), true, _ownerId, isAdmin: false));
+    }
+
+    [Fact]
+    public async Task SetIsDefaultAsync_WhenPublishingOwnTemplate_SetsOwnerIdToNull()
+    {
+        var template = CreateTemplate(_ownerId);
+        _repository.Setup(r => r.GetByIdAsync(template.Id)).ReturnsAsync(template);
+
+        var result = await _sut.SetIsDefaultAsync(template.Id, true, _ownerId, isAdmin: true);
+
+        Assert.True(result.IsDefault);
+        Assert.Null(template.OwnerId);
+        _repository.Verify(r => r.SaveChangesAsync(), Times.Once);
+    }
+
+    [Fact]
+    public async Task SetIsDefaultAsync_WhenUnpublishingDefaultTemplate_SetsOwnerIdToCaller()
+    {
+        var template = CreateTemplate(null);
+        _repository.Setup(r => r.GetByIdAsync(template.Id)).ReturnsAsync(template);
+
+        var result = await _sut.SetIsDefaultAsync(template.Id, false, _ownerId, isAdmin: true);
+
+        Assert.False(result.IsDefault);
+        Assert.Equal(_ownerId, template.OwnerId);
+    }
+
+    [Fact]
+    public async Task SetIsDefaultAsync_WhenTemplateOwnedByAnotherUser_ThrowsForbiddenAccessException()
+    {
+        var template = CreateTemplate(_otherUserId);
+        _repository.Setup(r => r.GetByIdAsync(template.Id)).ReturnsAsync(template);
+
+        await Assert.ThrowsAsync<ForbiddenAccessException>(
+            () => _sut.SetIsDefaultAsync(template.Id, true, _ownerId, isAdmin: true));
+
+        _repository.Verify(r => r.SaveChangesAsync(), Times.Never);
+    }
+
+    [Fact]
     public async Task GetPagedAsync_ReturnsMappedPagedResult()
     {
         var template = CreateTemplate(_ownerId);

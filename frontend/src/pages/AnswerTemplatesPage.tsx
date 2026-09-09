@@ -4,11 +4,12 @@ import {
     Paper, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, TextField,
     Typography, Chip, TablePagination,
 } from '@mui/material';
-import { Add, Edit, Delete, ContentCopy } from '@mui/icons-material';
+import { Add, Edit, Delete, ContentCopy, Public, PublicOff } from '@mui/icons-material';
 import Layout from '../components/Layout';
 import EmptyState from '../components/EmptyState';
 import {
     getAnswerTemplatesPaged, createAnswerTemplate, updateAnswerTemplate, deleteAnswerTemplate, duplicateAnswerTemplate,
+    setAnswerTemplateIsDefault,
 } from '../api/answerTemplateApi';
 import type { AnswerTemplate, UpdateAnswerOptionRequest } from '../types/answerTemplate';
 import { useCrudPage } from '../hooks/useCrudPage';
@@ -33,6 +34,15 @@ function AnswerTemplatesPage() {
     const handleDuplicate = async (id: string) => {
         try {
             await duplicateAnswerTemplate(id);
+            await reload();
+        } catch (err) {
+            showError(extractErrorMessage(err));
+        }
+    };
+
+    const handleSetIsDefault = async (id: string, isDefault: boolean) => {
+        try {
+            await setAnswerTemplateIsDefault(id, isDefault);
             await reload();
         } catch (err) {
             showError(extractErrorMessage(err));
@@ -129,6 +139,14 @@ function AnswerTemplatesPage() {
                                             ))}
                                     </TableCell>
                                     <TableCell align="right">
+                                        {isAdmin && (template.isMine || template.isDefault) && (
+                                            <IconButton
+                                                onClick={() => handleSetIsDefault(template.id, !template.isDefault)}
+                                                title={template.isDefault ? 'Varsayılanlıktan çıkar' : 'Varsayılan yap'}
+                                            >
+                                                {template.isDefault ? <PublicOff fontSize="small" /> : <Public fontSize="small" />}
+                                            </IconButton>
+                                        )}
                                         {canModify(template) ? (
                                             <>
                                                 <IconButton onClick={() => openEditDialog(template)}>

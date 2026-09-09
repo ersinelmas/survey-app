@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SurveyApp.Api.Extensions;
+using SurveyApp.Application.DTOs.Common;
 using SurveyApp.Application.DTOs.Questions;
 using SurveyApp.Application.Services;
 
@@ -64,5 +65,13 @@ public class QuestionsController : ControllerBase
     {
         var copy = await _service.DuplicateAsync(id, User.GetUserId());
         return CreatedAtAction(nameof(GetById), new { id = copy.Id }, copy);
+    }
+
+    [HttpPut("{id}/default")]
+    [Authorize(Policy = "Admin")]
+    public async Task<IActionResult> SetIsDefault(Guid id, SetIsDefaultRequest request)
+    {
+        var question = await _service.SetIsDefaultAsync(id, request.IsDefault, User.GetUserId(), User.IsAdmin());
+        return Ok(question);
     }
 }

@@ -137,6 +137,24 @@ public class QuestionService
         return MapToDto(copy, currentUserId);
     }
 
+    public async Task<QuestionDto> SetIsDefaultAsync(Guid id, bool isDefault, Guid currentUserId, bool isAdmin)
+    {
+        if (!isAdmin)
+            throw new ForbiddenAccessException("Bu işlem için yetkiniz yok.");
+
+        var question = await _questionRepository.GetByIdAsync(id);
+        if (question is null)
+            throw new KeyNotFoundException("Soru bulunamadı.");
+
+        if (!(question.OwnerId is null || question.OwnerId == currentUserId))
+            throw new ForbiddenAccessException("Başka bir kullanıcının içeriğini varsayılan yapamazsınız.");
+
+        question.OwnerId = isDefault ? null : currentUserId;
+        await _questionRepository.SaveChangesAsync();
+
+        return MapToDto(question, currentUserId);
+    }
+
     private static bool IsVisibleTo(Question question, Guid userId) =>
         question.OwnerId is null || question.OwnerId == userId;
 

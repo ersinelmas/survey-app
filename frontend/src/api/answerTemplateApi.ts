@@ -44,3 +44,8 @@ export const duplicateAnswerTemplate = async (id: string): Promise<AnswerTemplat
     const response = await axiosInstance.post<AnswerTemplate>(`/AnswerTemplates/${id}/duplicate`);
     return response.data;
 };
+
+export const setAnswerTemplateIsDefault = async (id: string, isDefault: boolean): Promise<AnswerTemplate> => {
+    const response = await axiosInstance.put<AnswerTemplate>(`/AnswerTemplates/${id}/default`, { isDefault });
+    return response.data;
+};
