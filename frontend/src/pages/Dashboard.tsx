@@ -1,6 +1,6 @@
 import { Box, Typography, Card, CardActionArea, CardContent, Grid } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { ListAlt, HelpOutlined, Assignment } from '@mui/icons-material';
+import { ListAlt, HelpOutlined, Assignment, EventAvailable } from '@mui/icons-material';
 import Layout from '../components/Layout';
 import { fontFamilyMono } from '../theme';
 
@@ -10,34 +10,41 @@ const sections = [
         title: 'Cevap Şablonları',
         description: 'Anketlerde kullanılacak şık kalıplarını (Evet/Hayır, 1-4 puan vb.) tanımlayın.',
         icon: <ListAlt sx={{ fontSize: 32 }} />,
-        path: '/admin/answer-templates',
+        path: '/answer-templates',
     },
     {
         step: '02',
         title: 'Sorular',
         description: 'Cevap şablonlarına bağlı soruları oluşturun ve yönetin.',
         icon: <HelpOutlined sx={{ fontSize: 32 }} />,
-        path: '/admin/questions',
+        path: '/questions',
     },
     {
         step: '03',
         title: 'Anketler',
         description: 'Soruları bir araya getirip kullanıcılara atayın, sonuçları raporlayın.',
         icon: <Assignment sx={{ fontSize: 32 }} />,
-        path: '/admin/surveys',
+        path: '/surveys',
+    },
+    {
+        step: '04',
+        title: 'Doldurmam Gerekenler',
+        description: 'Size atanan ve son tarihi geçmemiş anketleri görüntüleyip doldurun.',
+        icon: <EventAvailable sx={{ fontSize: 32 }} />,
+        path: '/my-surveys',
     },
 ];
 
-function AdminDashboard() {
+function Dashboard() {
     const navigate = useNavigate();
 
     return (
         <Layout>
             <Typography variant="h5" sx={{ mb: 1 }}>
-                Admin Paneli
+                Panel
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                Anket akışı üç adımdan oluşur: önce şablon, sonra soru, sonra anket.
+                Kendi anketlerinizi oluşturun ve size atanan anketleri doldurun.
             </Typography>
 
             <Grid container spacing={2}>
@@ -86,4 +93,4 @@ function AdminDashboard() {
     );
 }
 
-export default AdminDashboard;
+export default Dashboard;

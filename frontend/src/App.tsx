@@ -1,10 +1,10 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './context/AuthContext';
+import { AuthProvider } from './context/AuthContext';
 import { SnackbarProvider } from './context/SnackbarContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
-import AdminDashboard from './pages/AdminDashboard';
+import Dashboard from './pages/Dashboard';
 import UserDashboard from './pages/UserDashboard';
 import AnswerTemplatesPage from './pages/AnswerTemplatesPage';
 import QuestionsPage from './pages/QuestionsPage';
@@ -12,12 +12,6 @@ import SurveysPage from './pages/SurveysPage';
 import FillSurveyPage from './pages/FillSurveyPage';
 import SurveyReportPage from './pages/SurveyReportPage';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
-
-function HomeRedirect() {
-  const { role } = useAuth();
-  if (role === 'Admin') return <Navigate to="/admin" replace />;
-  return <Navigate to="/my-surveys" replace />;
-}
 
 function App() {
   return (
@@ -32,39 +26,47 @@ function App() {
               path="/"
               element={
                 <ProtectedRoute>
-                  <HomeRedirect />
+                  <Navigate to="/dashboard" replace />
                 </ProtectedRoute>
               }
             />
             <Route
-              path="/admin"
+              path="/dashboard"
               element={
-                <ProtectedRoute requiredRole="Admin">
-                  <AdminDashboard />
+                <ProtectedRoute>
+                  <Dashboard />
                 </ProtectedRoute>
               }
             />
             <Route
-              path="/admin/answer-templates"
+              path="/answer-templates"
               element={
-                <ProtectedRoute requiredRole="Admin">
+                <ProtectedRoute>
                   <AnswerTemplatesPage />
                 </ProtectedRoute>
               }
             />
             <Route
-              path="/admin/questions"
+              path="/questions"
               element={
-                <ProtectedRoute requiredRole="Admin">
+                <ProtectedRoute>
                   <QuestionsPage />
                 </ProtectedRoute>
               }
             />
             <Route
-              path="/admin/surveys"
+              path="/surveys"
               element={
-                <ProtectedRoute requiredRole="Admin">
+                <ProtectedRoute>
                   <SurveysPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/surveys/:surveyId/report"
+              element={
+                <ProtectedRoute>
+                  <SurveyReportPage />
                 </ProtectedRoute>
               }
             />
@@ -81,14 +83,6 @@ function App() {
               element={
                 <ProtectedRoute>
                   <FillSurveyPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/surveys/:surveyId/report"
-              element={
-                <ProtectedRoute requiredRole="Admin">
-                  <SurveyReportPage />
                 </ProtectedRoute>
               }
             />

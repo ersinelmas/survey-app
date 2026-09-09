@@ -4,25 +4,40 @@ import {
     Paper, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, TextField,
     Typography, Chip, TablePagination,
 } from '@mui/material';
-import { Add, Edit, Delete } from '@mui/icons-material';
+import { Add, Edit, Delete, ContentCopy } from '@mui/icons-material';
 import Layout from '../components/Layout';
 import EmptyState from '../components/EmptyState';
 import {
-    getAnswerTemplatesPaged, createAnswerTemplate, updateAnswerTemplate, deleteAnswerTemplate,
+    getAnswerTemplatesPaged, createAnswerTemplate, updateAnswerTemplate, deleteAnswerTemplate, duplicateAnswerTemplate,
 } from '../api/answerTemplateApi';
 import type { AnswerTemplate, UpdateAnswerOptionRequest } from '../types/answerTemplate';
 import { useCrudPage } from '../hooks/useCrudPage';
+import { useAuth } from '../context/AuthContext';
+import { useSnackbar } from '../context/SnackbarContext';
+import { extractErrorMessage } from '../api/errorHelper';
 
 function AnswerTemplatesPage() {
+    const { isAdmin } = useAuth();
+    const { showError } = useSnackbar();
     const {
         items: templates, page, setPage, pageSize, setPageSize, totalCount,
         dialogOpen, setDialogOpen, editingId, setEditingId,
-        error, setError, saving, handleDelete, runSave,
+        error, setError, saving, handleDelete, runSave, reload,
     } = useCrudPage<AnswerTemplate>({
         fetchPage: getAnswerTemplatesPaged,
         remove: deleteAnswerTemplate,
         deleteConfirmMessage: 'Bu cevap şablonunu silmek istediğinize emin misiniz?',
     });
+    const canModify = (template: AnswerTemplate) => template.isMine || (isAdmin && template.isDefault);
+
+    const handleDuplicate = async (id: string) => {
+        try {
+            await duplicateAnswerTemplate(id);
+            await reload();
+        } catch (err) {
+            showError(extractErrorMessage(err));
+        }
+    };
     const [name, setName] = useState('');
     const [options, setOptions] = useState<UpdateAnswerOptionRequest[]>([
         { id: null, text: '', order: 1 },
@@ -100,7 +115,12 @@ function AnswerTemplatesPage() {
                         <TableBody>
                             {templates.map((template) => (
                                 <TableRow key={template.id}>
-                                    <TableCell>{template.name}</TableCell>
+                                    <TableCell>
+                                        {template.name}
+                                        {template.isDefault && (
+                                            <Chip label="Varsayılan" size="small" sx={{ ml: 1 }} />
+                                        )}
+                                    </TableCell>
                                     <TableCell>
                                         {template.options
                                             .sort((a, b) => a.order - b.order)
@@ -109,12 +129,20 @@ function AnswerTemplatesPage() {
                                             ))}
                                     </TableCell>
                                     <TableCell align="right">
-                                        <IconButton onClick={() => openEditDialog(template)}>
-                                            <Edit fontSize="small" />
-                                        </IconButton>
-                                        <IconButton onClick={() => handleDelete(template.id)}>
-                                            <Delete fontSize="small" />
-                                        </IconButton>
+                                        {canModify(template) ? (
+                                            <>
+                                                <IconButton onClick={() => openEditDialog(template)}>
+                                                    <Edit fontSize="small" />
+                                                </IconButton>
+                                                <IconButton onClick={() => handleDelete(template.id)}>
+                                                    <Delete fontSize="small" />
+                                                </IconButton>
+                                            </>
+                                        ) : (
+                                            <IconButton onClick={() => handleDuplicate(template.id)} title="Kendime kopyala">
+                                                <ContentCopy fontSize="small" />
+                                            </IconButton>
+                                        )}
                                     </TableCell>
                                 </TableRow>
                             ))}

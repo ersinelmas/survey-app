@@ -55,7 +55,7 @@ function SurveysPage() {
     const [selectedUsers, setSelectedUsers] = useState<User[]>([]);
 
     useEffect(() => {
-        Promise.all([getQuestions(), getUsers('User')])
+        Promise.all([getQuestions(), getUsers()])
             .then(([questionsData, usersData]) => {
                 setQuestions(questionsData);
                 setUsers(usersData);
@@ -172,7 +172,7 @@ function SurveysPage() {
                                         {survey.questions.length} soru / {survey.assignedUsers.length} kullanıcı
                                     </TableCell>
                                     <TableCell align="right">
-                                        <IconButton onClick={() => navigate(`/admin/surveys/${survey.id}/report`)}>
+                                        <IconButton onClick={() => navigate(`/surveys/${survey.id}/report`)}>
                                             <Assessment fontSize="small" />
                                         </IconButton>
                                         <IconButton onClick={() => openEditDialog(survey)}>

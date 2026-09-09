@@ -3,6 +3,8 @@ export interface Question {
     text: string;
     answerTemplateId: string;
     answerTemplateName: string;
+    isDefault: boolean;
+    isMine: boolean;
 }
 
 export interface CreateQuestionRequest {

@@ -2,25 +2,27 @@ import { useEffect, useState } from 'react';
 import {
     Box, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
     Paper, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, TextField,
-    Typography, MenuItem, TablePagination,
+    Typography, MenuItem, TablePagination, Chip,
 } from '@mui/material';
-import { Add, Edit, Delete } from '@mui/icons-material';
+import { Add, Edit, Delete, ContentCopy } from '@mui/icons-material';
 import Layout from '../components/Layout';
 import EmptyState from '../components/EmptyState';
-import { getQuestionsPaged, createQuestion, updateQuestion, deleteQuestion } from '../api/questionApi';
+import { getQuestionsPaged, createQuestion, updateQuestion, deleteQuestion, duplicateQuestion } from '../api/questionApi';
 import { getAnswerTemplates } from '../api/answerTemplateApi';
 import type { Question } from '../types/question';
 import type { AnswerTemplate } from '../types/answerTemplate';
 import { useCrudPage } from '../hooks/useCrudPage';
+import { useAuth } from '../context/AuthContext';
 import { useSnackbar } from '../context/SnackbarContext';
 import { extractErrorMessage } from '../api/errorHelper';
 
 function QuestionsPage() {
+    const { isAdmin } = useAuth();
     const { showError } = useSnackbar();
     const {
         items: questions, page, setPage, pageSize, setPageSize, totalCount,
         dialogOpen, setDialogOpen, editingId, setEditingId,
-        error, setError, saving, handleDelete, runSave,
+        error, setError, saving, handleDelete, runSave, reload,
     } = useCrudPage<Question>({
         fetchPage: getQuestionsPaged,
         remove: deleteQuestion,
@@ -29,6 +31,16 @@ function QuestionsPage() {
     const [templates, setTemplates] = useState<AnswerTemplate[]>([]);
     const [text, setText] = useState('');
     const [answerTemplateId, setAnswerTemplateId] = useState('');
+    const canModify = (question: Question) => question.isMine || (isAdmin && question.isDefault);
+
+    const handleDuplicate = async (id: string) => {
+        try {
+            await duplicateQuestion(id);
+            await reload();
+        } catch (err) {
+            showError(extractErrorMessage(err));
+        }
+    };
 
     useEffect(() => {
         getAnswerTemplates()
@@ -90,15 +102,28 @@ function QuestionsPage() {
                         <TableBody>
                             {questions.map((question) => (
                                 <TableRow key={question.id}>
-                                    <TableCell>{question.text}</TableCell>
+                                    <TableCell>
+                                        {question.text}
+                                        {question.isDefault && (
+                                            <Chip label="Varsayılan" size="small" sx={{ ml: 1 }} />
+                                        )}
+                                    </TableCell>
                                     <TableCell>{question.answerTemplateName}</TableCell>
                                     <TableCell align="right">
-                                        <IconButton onClick={() => openEditDialog(question)}>
-                                            <Edit fontSize="small" />
-                                        </IconButton>
-                                        <IconButton onClick={() => handleDelete(question.id)}>
-                                            <Delete fontSize="small" />
-                                        </IconButton>
+                                        {canModify(question) ? (
+                                            <>
+                                                <IconButton onClick={() => openEditDialog(question)}>
+                                                    <Edit fontSize="small" />
+                                                </IconButton>
+                                                <IconButton onClick={() => handleDelete(question.id)}>
+                                                    <Delete fontSize="small" />
+                                                </IconButton>
+                                            </>
+                                        ) : (
+                                            <IconButton onClick={() => handleDuplicate(question.id)} title="Kendime kopyala">
+                                                <ContentCopy fontSize="small" />
+                                            </IconButton>
+                                        )}
                                     </TableCell>
                                 </TableRow>
                             ))}

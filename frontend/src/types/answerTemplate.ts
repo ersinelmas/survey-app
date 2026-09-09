@@ -7,6 +7,8 @@ export interface AnswerOption {
 export interface AnswerTemplate {
     id: string;
     name: string;
+    isDefault: boolean;
+    isMine: boolean;
     options: AnswerOption[];
 }
 

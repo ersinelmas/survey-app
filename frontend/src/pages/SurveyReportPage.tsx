@@ -51,7 +51,7 @@ function SurveyReportPage() {
 
     return (
         <Layout>
-            <BackButton label="Anketlere Dön" onClick={() => navigate('/admin/surveys')} />
+            <BackButton label="Anketlere Dön" onClick={() => navigate('/surveys')} />
 
             <Typography variant="h5" sx={{ mb: 3 }}>
                 {report.title} - Raporu

@@ -4,17 +4,17 @@ import { useAuth } from '../context/AuthContext';
 
 interface ProtectedRouteProps {
     children: ReactNode;
-    requiredRole?: string;
+    requireAdmin?: boolean;
 }
 
-function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) {
-    const { isAuthenticated, role } = useAuth();
+function ProtectedRoute({ children, requireAdmin }: ProtectedRouteProps) {
+    const { isAuthenticated, isAdmin } = useAuth();
 
     if (!isAuthenticated) {
         return <Navigate to="/login" replace />;
     }
 
-    if (requiredRole && role !== requiredRole) {
+    if (requireAdmin && !isAdmin) {
         return <Navigate to="/" replace />;
     }
 

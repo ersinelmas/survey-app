@@ -27,3 +27,8 @@ export const updateQuestion = async (id: string, data: UpdateQuestionRequest): P
 export const deleteQuestion = async (id: string): Promise<void> => {
     await axiosInstance.delete(`/Questions/${id}`);
 };
+
+export const duplicateQuestion = async (id: string): Promise<Question> => {
+    const response = await axiosInstance.post<Question>(`/Questions/${id}/duplicate`);
+    return response.data;
+};

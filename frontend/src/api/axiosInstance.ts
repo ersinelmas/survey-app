@@ -18,7 +18,7 @@ const clearSessionAndRedirect = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('email');
-    localStorage.removeItem('role');
+    localStorage.removeItem('isAdmin');
     if (window.location.pathname !== '/login') {
         window.location.href = '/login';
     }

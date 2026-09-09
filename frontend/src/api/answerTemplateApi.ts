@@ -39,3 +39,8 @@ export const updateAnswerTemplate = async (
 export const deleteAnswerTemplate = async (id: string): Promise<void> => {
     await axiosInstance.delete(`/AnswerTemplates/${id}`);
 };
+
+export const duplicateAnswerTemplate = async (id: string): Promise<AnswerTemplate> => {
+    const response = await axiosInstance.post<AnswerTemplate>(`/AnswerTemplates/${id}/duplicate`);
+    return response.data;
+};

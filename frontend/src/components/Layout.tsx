@@ -3,15 +3,16 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import type { ReactNode } from 'react';
 import { useAuth } from '../context/AuthContext';
 
-const adminTabs = [
-    { label: 'Panel', path: '/admin' },
-    { label: 'Cevap Şablonları', path: '/admin/answer-templates' },
-    { label: 'Sorular', path: '/admin/questions' },
-    { label: 'Anketler', path: '/admin/surveys' },
+const tabs = [
+    { label: 'Panel', path: '/dashboard' },
+    { label: 'Cevap Şablonları', path: '/answer-templates' },
+    { label: 'Sorular', path: '/questions' },
+    { label: 'Anketler', path: '/surveys' },
+    { label: 'Doldurmam Gerekenler', path: '/my-surveys' },
 ];
 
 function Layout({ children }: { children: ReactNode }) {
-    const { email, role, logout } = useAuth();
+    const { email, logout } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -20,21 +21,16 @@ function Layout({ children }: { children: ReactNode }) {
         navigate('/login');
     };
 
-    const handleHomeClick = () => {
-        navigate(role === 'Admin' ? '/admin' : '/my-surveys');
-    };
-
     const avatarLetter = email ? email.charAt(0).toUpperCase() : '?';
-    const avatarColor = role === 'Admin' ? '#C77A1F' : '#0F7A6C';
 
-    const activeTab = [...adminTabs].reverse().find((t) => location.pathname.startsWith(t.path))?.path ?? false;
+    const activeTab = [...tabs].reverse().find((t) => location.pathname.startsWith(t.path))?.path ?? false;
 
     return (
         <Box>
             <AppBar position="static">
                 <Toolbar sx={{ display: 'flex', justifyContent: 'space-between', gap: 1, px: { xs: 1.5, sm: 2 } }}>
                     <Box
-                        onClick={handleHomeClick}
+                        onClick={() => navigate('/dashboard')}
                         sx={{ display: 'flex', alignItems: 'center', gap: 1, cursor: 'pointer', minWidth: 0 }}
                     >
                         <Box
@@ -53,7 +49,7 @@ function Layout({ children }: { children: ReactNode }) {
                                 sx={{
                                     width: 32,
                                     height: 32,
-                                    bgcolor: avatarColor,
+                                    bgcolor: '#0F7A6C',
                                     fontSize: 14,
                                     border: '1px solid white',
                                     flexShrink: 0,
@@ -74,29 +70,27 @@ function Layout({ children }: { children: ReactNode }) {
                         </Button>
                     </Box>
                 </Toolbar>
-                {role === 'Admin' && (
-                    <Tabs
-                        value={activeTab}
-                        textColor="inherit"
-                        indicatorColor="secondary"
-                        variant="scrollable"
-                        scrollButtons={false}
-                        sx={{
+                <Tabs
+                    value={activeTab}
+                    textColor="inherit"
+                    indicatorColor="secondary"
+                    variant="scrollable"
+                    scrollButtons={false}
+                    sx={{
+                        minHeight: 40,
+                        borderTop: '1px solid rgba(255,255,255,0.12)',
+                        '& .MuiTab-root': {
                             minHeight: 40,
-                            borderTop: '1px solid rgba(255,255,255,0.12)',
-                            '& .MuiTab-root': {
-                                minHeight: 40,
-                                textTransform: 'none',
-                                color: 'rgba(255,255,255,0.7)',
-                                '&.Mui-selected': { color: '#fff' },
-                            },
-                        }}
-                    >
-                        {adminTabs.map((t) => (
-                            <Tab key={t.path} label={t.label} value={t.path} onClick={() => navigate(t.path)} />
-                        ))}
-                    </Tabs>
-                )}
+                            textTransform: 'none',
+                            color: 'rgba(255,255,255,0.7)',
+                            '&.Mui-selected': { color: '#fff' },
+                        },
+                    }}
+                >
+                    {tabs.map((t) => (
+                        <Tab key={t.path} label={t.label} value={t.path} onClick={() => navigate(t.path)} />
+                    ))}
+                </Tabs>
             </AppBar>
             <Box sx={{ padding: { xs: 2, sm: 3 } }}>{children}</Box>
         </Box>
