@@ -20,6 +20,13 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
         return await _dbSet.ToListAsync();
     }
 
+    public async Task<(List<T> Items, int TotalCount)> GetPagedAsync(int page, int pageSize)
+    {
+        var totalCount = await _dbSet.CountAsync();
+        var items = await _dbSet.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
+        return (items, totalCount);
+    }
+
     public async Task<T?> GetByIdAsync(Guid id)
     {
         return await _dbSet.FindAsync(id);

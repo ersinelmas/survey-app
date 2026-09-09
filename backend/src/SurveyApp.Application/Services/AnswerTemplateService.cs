@@ -1,4 +1,5 @@
 using SurveyApp.Application.DTOs.AnswerTemplates;
+using SurveyApp.Application.DTOs.Common;
 using SurveyApp.Core.Entities;
 using SurveyApp.Core.Interfaces;
 
@@ -17,6 +18,18 @@ public class AnswerTemplateService
     {
         var templates = await _repository.GetAllAsync();
         return templates.Select(MapToDto).ToList();
+    }
+
+    public async Task<PagedResult<AnswerTemplateDto>> GetPagedAsync(int page, int pageSize)
+    {
+        var (items, totalCount) = await _repository.GetPagedAsync(page, pageSize);
+        return new PagedResult<AnswerTemplateDto>
+        {
+            Items = items.Select(MapToDto).ToList(),
+            TotalCount = totalCount,
+            Page = page,
+            PageSize = pageSize
+        };
     }
 
     public async Task<AnswerTemplateDto> GetByIdAsync(Guid id)

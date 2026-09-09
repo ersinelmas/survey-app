@@ -18,10 +18,16 @@ public class AnswerTemplatesController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll()
+    public async Task<IActionResult> GetAll([FromQuery] int? page, [FromQuery] int? pageSize)
     {
-        var templates = await _service.GetAllAsync();
-        return Ok(templates);
+        if (page is null && pageSize is null)
+        {
+            var templates = await _service.GetAllAsync();
+            return Ok(templates);
+        }
+
+        var result = await _service.GetPagedAsync(Math.Max(page ?? 1, 1), Math.Clamp(pageSize ?? 20, 1, 100));
+        return Ok(result);
     }
 
     [HttpGet("{id}")]

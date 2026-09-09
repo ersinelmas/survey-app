@@ -18,6 +18,18 @@ public class QuestionRepository : GenericRepository<Question>, IQuestionReposito
             .ToListAsync();
     }
 
+    public new async Task<(List<Question> Items, int TotalCount)> GetPagedAsync(int page, int pageSize)
+    {
+        var query = _context.Questions.Include(q => q.AnswerTemplate);
+        var totalCount = await query.CountAsync();
+        var items = await query
+            .OrderByDescending(q => q.CreatedAt).ThenBy(q => q.Id)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+        return (items, totalCount);
+    }
+
     public new async Task<Question?> GetByIdAsync(Guid id)
     {
         return await _context.Questions

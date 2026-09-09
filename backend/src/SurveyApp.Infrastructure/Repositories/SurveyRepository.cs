@@ -19,6 +19,20 @@ public class SurveyRepository : GenericRepository<Survey>, ISurveyRepository
             .ToListAsync();
     }
 
+    public new async Task<(List<Survey> Items, int TotalCount)> GetPagedAsync(int page, int pageSize)
+    {
+        var query = _context.Surveys
+            .Include(s => s.SurveyQuestions).ThenInclude(sq => sq.Question)
+            .Include(s => s.Assignments).ThenInclude(a => a.User);
+        var totalCount = await query.CountAsync();
+        var items = await query
+            .OrderByDescending(s => s.CreatedAt).ThenBy(s => s.Id)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+        return (items, totalCount);
+    }
+
     public new async Task<Survey?> GetByIdAsync(Guid id)
     {
         return await _context.Surveys

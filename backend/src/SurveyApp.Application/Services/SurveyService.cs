@@ -1,3 +1,4 @@
+using SurveyApp.Application.DTOs.Common;
 using SurveyApp.Application.DTOs.Surveys;
 using SurveyApp.Core.Entities;
 using SurveyApp.Core.Interfaces;
@@ -27,6 +28,18 @@ public class SurveyService
     {
         var surveys = await _surveyRepository.GetAllAsync();
         return surveys.Select(MapToDto).ToList();
+    }
+
+    public async Task<PagedResult<SurveyDto>> GetPagedAsync(int page, int pageSize)
+    {
+        var (items, totalCount) = await _surveyRepository.GetPagedAsync(page, pageSize);
+        return new PagedResult<SurveyDto>
+        {
+            Items = items.Select(MapToDto).ToList(),
+            TotalCount = totalCount,
+            Page = page,
+            PageSize = pageSize
+        };
     }
 
     public async Task<SurveyDto> GetByIdAsync(Guid id)
