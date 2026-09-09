@@ -3,3 +3,8 @@ export interface User {
     email: string;
     isAdmin: boolean;
 }
+
+export interface UserSearchResult {
+    id: string;
+    email: string;
+}

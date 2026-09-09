@@ -1,16 +1,12 @@
 # Survey App
 
-Kullanıcıların anket oluşturmasına, yönetmesine ve cevaplamasına olanak tanıyan bir web uygulaması. Admin ve User olmak üzere iki rol içerir.
+Kullanıcıların kendi anket/soru/cevap şablonlarını oluşturup yönettiği ve anketleri hem atanan kullanıcılar hem de (isteğe bağlı) herkese açık bir link üzerinden üyeliksiz kişilerin doldurabildiği bir web uygulaması. İçerik erişimi role değil, **sahipliğe** dayanır: her kullanıcı yalnızca kendi oluşturduğu ve sistemin sunduğu varsayılan içerikleri görür/düzenler.
 
 ## Canlı Demo
 
 **[surveyapp.ersinelmas.com](https://surveyapp.ersinelmas.com)**
 
-**Demo Admin girişi** (anket/soru/şablon oluşturma dahil her şeyi deneyebilirsiniz; kayıtlı verilerin korunması için silme işlemleri bu hesapta kapalıdır):
-- Email: `admin@surveyapp.com`
-- Şifre: `GHZxGcNzDlkfWr5kKG9Q`
-
-**Normal kullanıcı**: `/register` sayfasından kendi hesabınızı oluşturup anket doldurma akışını deneyebilirsiniz.
+`/register` sayfasından kendi hesabınızı oluşturup kendi anket/soru/şablonlarınızı oluşturabilir, anketlerinizi atayabilir ya da herkese açık link ile paylaşabilirsiniz. Platform yönetimi yetkisine (`IsAdmin`) sahip bir hesap sistemde mevcuttur ancak bilgileri artık herkese açık paylaşılmamaktadır.
 
 ## Kullanılan Teknolojiler
 
@@ -18,7 +14,7 @@ Kullanıcıların anket oluşturmasına, yönetmesine ve cevaplamasına olanak t
 - .NET 8 Web API, Clean Architecture (Core / Application / Infrastructure / API katmanları)
 - Entity Framework Core 8 (Code-First, Migrations)
 - PostgreSQL (Docker ile çalıştırılır)
-- JWT tabanlı kimlik doğrulama (access + refresh token, rotation ile), rol bazlı yetkilendirme (Admin / User)
+- JWT tabanlı kimlik doğrulama (access + refresh token, rotation ile), sahiplik bazlı yetkilendirme (`OwnerId` + platform yönetimi için `IsAdmin` bayrağı)
 - BCrypt ile şifre hashleme
 - Built-in rate limiting (auth endpoint'lerinde brute-force/spam koruması)
 - xUnit + Moq ile unit testler
@@ -42,7 +38,8 @@ Kullanıcıların anket oluşturmasına, yönetmesine ve cevaplamasına olanak t
 - **DTO ayrımı**: Her CRUD işlemi için ayrı request/response DTO'ları kullanıldı (örn. `CreateXRequest`, `UpdateXRequest`, `XDto`), entity'ler API sınırının dışına hiç çıkmıyor.
 - **Veri bütünlüğü**: Kullanılan bir soru veya cevap şablonu silinemez (referential integrity kontrolü uygulama katmanında yapılıyor). Bir anketin kullanıcı ataması güncellenirken, daha önce tamamlanmış atamalar korunuyor, sadece fark eden kayıtlar eklenip/çıkarılıyor.
 - **Güvenlik**: JWT access token'lar 60 dakika geçerli; süresi dolunca frontend, refresh token ile sessizce yeni bir token alır (kullanıcı fark etmez), refresh token da geçersizse otomatik çıkış yapılır. Refresh token'lar rotation ile korunur (her kullanımda eskisi geçersiz kılınıp yenisi üretilir).
-- **Rol modeli**: Uygulama, içerik sahipliğini rol yerine kullanıcı bazlı sahiplik (`OwnerId`) üzerinden yönetecek şekilde yeniden tasarlanıyor — her kullanıcı kendi anket/soru/şablonunu oluşturur ve yönetir. `IsAdmin` bayrağı artık içerik yetkisiyle değil, sadece platform yönetimiyle (kullanıcı listesi vb.) ilgilidir; tek bir admin hesabı `AdminSeed:*` ortam değişkenleriyle oluşturulur.
+- **Sahiplik modeli**: İçerik erişimi role değil, kullanıcı bazlı sahipliğe (`OwnerId`) dayanır — her kullanıcı kendi anket/soru/cevap şablonunu oluşturur, yalnızca kendi içeriğini ve sistemin sunduğu varsayılanları (`OwnerId = null`) görür. Bir varsayılanı değiştirmek isteyen kullanıcı onu "kendime kopyala" ile kendi hesabına klonlar, orijinali etkilemez. `IsAdmin` bayrağı içerik yetkisiyle değil, platform yönetimiyle (kullanıcı listesi, moderasyon amaçlı üçüncü taraf içeriğine müdahale) ilgilidir; tek bir admin hesabı `AdminSeed:*` ortam değişkenleriyle oluşturulur.
+- **Herkese açık anketler**: Bir anket sahibi, anketi atama yapmadan da bir link üzerinden herkese açabilir (`IsPublic`). Bu linkten doldurma üyelik gerektirmez; anket sahibi isterse "yanıtlamak için üyelik gerektir" seçeneğini açabilir. Üyeliksiz doldurmada mükerrer gönderim, tarayıcıya özel rastgele bir token ile iyi niyetli olarak sınırlandırılır (garanti değildir — bu, sektördeki benzer araçların da yaklaşımıdır).
 
 ## Kurulum ve Çalıştırma (Local Geliştirme)
 
@@ -91,11 +88,12 @@ dotnet test tests/SurveyApp.Application.Tests/SurveyApp.Application.Tests.csproj
 
 ## Kullanım Akışı
 
-1. Admin, önce **Cevap Şablonları** (şık kalıpları, 2-4 şık) tanımlar.
-2. Ardından **Sorular**, bir cevap şablonuna bağlanarak oluşturulur.
-3. **Anketler**, sorulardan seçilerek ve kullanıcılara atanarak oluşturulur (tarih aralığı ve aktif/pasif durumu ile).
-4. Atanan kullanıcılar `/my-surveys` üzerinden aktif anketlerini görür, doldurur.
-5. Admin, her anket için doldurma oranını ve soru bazında cevap dağılımını raporlama ekranından izler.
+1. Kullanıcı önce **Cevap Şablonları** (şık kalıpları, 2-4 şık) tanımlar — kendi şablonunu oluşturabilir veya sistemin sunduğu varsayılanlardan birini "kendime kopyala" ile alıp özelleştirebilir.
+2. Ardından **Sorular**, bir cevap şablonuna bağlanarak oluşturulur (aynı şekilde kendi sorusu veya kopyalanmış bir varsayılan).
+3. **Anketler**, sorulardan seçilerek oluşturulur (tarih aralığı ve aktif/pasif durumu ile). İki dağıtım yolu vardır:
+   - **Atama**: belirli kullanıcılar seçilip ankete atanır, onlar `/my-surveys` üzerinden aktif anketlerini görüp doldurur.
+   - **Herkese açık link**: anket sahibi "herkese açık link ile paylaş"ı açar, oluşan linki (`/public/surveys/{id}`) paylaşır; üyelik gerekmez (sahibi isterse zorunlu tutabilir).
+4. Anket sahibi, her anket için doldurma oranını ve soru bazında cevap dağılımını raporlama ekranından izler (herkese açık anketlerde cevaplayan kişi giriş yapmamışsa "Anonim" olarak görünür).
 
 ## Proje Yapısı
 
@@ -120,6 +118,7 @@ frontend/
 
 ## Bilinen Sınırlamalar / Zaman Kısıtı Nedeniyle Basit Tutulan Noktalar
 
-- Gizlilik politikası ve hesap silme akışı henüz eklenmedi (halka açık demo için planlanıyor).
-- Anket raporlama ekranında filtreleme/arama (proje şartında opsiyonel olarak belirtilmiş) eklenmedi, temel istatistiklerle sınırlı tutuldu.
-- Admin kullanıcı yönetimi (kullanıcı listeleme dışında ekleme/silme/rol değiştirme) ayrı bir ekran olarak sunulmadı; kullanıcılar `/register` üzerinden kendileri kayıt oluyor.
+- Hesap silme akışı henüz eklenmedi (KVKK "unutulma hakkı" için planlanıyor).
+- Anket raporlama ekranında filtreleme/arama eklenmedi, temel istatistiklerle sınırlı tutuldu. Ayrıca herkese açık anketlerde tamamlanma oranı özeti (halka/sayaç) sadece atama bazlı katılımcıları sayar; anonim/üyeliksiz cevaplar soru bazlı dökümde görünür ama üstteki özet sayılara yansımaz.
+- Cevap şablonlarında şık sayısı 2-4 ile sınırlı ve tek soru tipi (tek seçim) desteklenir; serbest metin, çoklu seçim, ölçek gibi soru tipleri planlanıyor.
+- Admin kullanıcı yönetimi (tam liste dışında ekleme/silme) ayrı bir ekran olarak sunulmadı; kullanıcılar `/register` üzerinden kendileri kayıt oluyor. Anket ataması için kullanıcı seçimi, tüm kullanıcı dizinini ifşa etmemek adına en az 3 karakterlik email araması (`/api/users/search`, en fazla 10 sonuç) üzerinden yapılır; tam liste (`/api/users`) sadece platform admin'e açıktır.

@@ -10,10 +10,10 @@ import Layout from '../components/Layout';
 import EmptyState from '../components/EmptyState';
 import { getSurveysPaged, createSurvey, updateSurvey, deleteSurvey } from '../api/surveyApi';
 import { getQuestions } from '../api/questionApi';
-import { getUsers } from '../api/userApi';
+import { searchUsers } from '../api/userApi';
 import type { Survey } from '../types/survey';
 import type { Question } from '../types/question';
-import type { User } from '../types/user';
+import type { UserSearchResult } from '../types/user';
 import { useCrudPage } from '../hooks/useCrudPage';
 import { useSnackbar } from '../context/SnackbarContext';
 import { extractErrorMessage } from '../api/errorHelper';
@@ -44,7 +44,6 @@ function SurveysPage() {
         deleteConfirmMessage: 'Bu anketi silmek istediğinize emin misiniz?',
     });
     const [questions, setQuestions] = useState<Question[]>([]);
-    const [users, setUsers] = useState<User[]>([]);
 
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
@@ -54,7 +53,26 @@ function SurveysPage() {
     const [isPublic, setIsPublic] = useState(false);
     const [requireLoginForPublicResponses, setRequireLoginForPublicResponses] = useState(false);
     const [selectedQuestions, setSelectedQuestions] = useState<Question[]>([]);
-    const [selectedUsers, setSelectedUsers] = useState<User[]>([]);
+    const [selectedUsers, setSelectedUsers] = useState<UserSearchResult[]>([]);
+    const [userSearchInput, setUserSearchInput] = useState('');
+    const [userSearchResults, setUserSearchResults] = useState<UserSearchResult[]>([]);
+    const [userSearchLoading, setUserSearchLoading] = useState(false);
+
+    useEffect(() => {
+        const query = userSearchInput.trim();
+        const timeout = setTimeout(() => {
+            if (query.length < 3) {
+                setUserSearchResults([]);
+                return;
+            }
+            setUserSearchLoading(true);
+            searchUsers(query)
+                .then(setUserSearchResults)
+                .catch((err) => showError(extractErrorMessage(err)))
+                .finally(() => setUserSearchLoading(false));
+        }, 300);
+        return () => clearTimeout(timeout);
+    }, [userSearchInput, showError]);
 
     const copyPublicLink = async (surveyId: string) => {
         const link = `${window.location.origin}/public/surveys/${surveyId}`;
@@ -67,11 +85,8 @@ function SurveysPage() {
     };
 
     useEffect(() => {
-        Promise.all([getQuestions(), getUsers()])
-            .then(([questionsData, usersData]) => {
-                setQuestions(questionsData);
-                setUsers(usersData);
-            })
+        getQuestions()
+            .then(setQuestions)
             .catch((err) => showError(extractErrorMessage(err)));
     }, [showError]);
 
@@ -86,6 +101,8 @@ function SurveysPage() {
         setRequireLoginForPublicResponses(false);
         setSelectedQuestions([]);
         setSelectedUsers([]);
+        setUserSearchInput('');
+        setUserSearchResults([]);
         setError('');
         setDialogOpen(true);
     };
@@ -105,11 +122,9 @@ function SurveysPage() {
                 .map((q) => questions.find((full) => full.id === q.questionId))
                 .filter((q): q is Question => !!q)
         );
-        setSelectedUsers(
-            survey.assignedUsers
-                .map((u) => users.find((full) => full.id === u.userId))
-                .filter((u): u is User => !!u)
-        );
+        setSelectedUsers(survey.assignedUsers.map((u) => ({ id: u.userId, email: u.email })));
+        setUserSearchInput('');
+        setUserSearchResults([]);
         setError('');
         setDialogOpen(true);
     };
@@ -298,12 +313,27 @@ function SurveysPage() {
                     />
                     <Autocomplete
                         multiple
-                        options={users}
+                        filterOptions={(x) => x}
+                        options={userSearchResults}
                         getOptionLabel={(u) => u.email}
+                        isOptionEqualToValue={(option, value) => option.id === value.id}
                         value={selectedUsers}
+                        loading={userSearchLoading}
+                        inputValue={userSearchInput}
+                        onInputChange={(_, newInputValue) => setUserSearchInput(newInputValue)}
                         onChange={(_, newValue) => setSelectedUsers(newValue)}
+                        noOptionsText={
+                            userSearchInput.trim().length < 3
+                                ? 'Aramak için en az 3 karakter yazın'
+                                : 'Kullanıcı bulunamadı'
+                        }
                         renderInput={(params) => (
-                            <TextField {...params} label="Atanacak Kullanıcılar" margin="normal" />
+                            <TextField
+                                {...params}
+                                label="Atanacak Kullanıcılar (email ile ara)"
+                                margin="normal"
+                                helperText="Kullanıcının email adresinden en az 3 karakter yazarak arayın."
+                            />
                         )}
                     />
                 </DialogContent>

@@ -28,4 +28,13 @@ public class UserRepository : GenericRepository<User>, IUserRepository
             .ToListAsync();
         return (items, totalCount);
     }
+
+    public async Task<List<User>> SearchByEmailAsync(string query, int limit)
+    {
+        return await _context.Users
+            .Where(u => EF.Functions.ILike(u.Email, $"%{query}%"))
+            .OrderBy(u => u.Email)
+            .Take(limit)
+            .ToListAsync();
+    }
 }

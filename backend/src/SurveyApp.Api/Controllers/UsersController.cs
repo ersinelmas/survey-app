@@ -9,6 +9,9 @@ namespace SurveyApp.Api.Controllers;
 [Authorize]
 public class UsersController : ControllerBase
 {
+    private const int MinSearchQueryLength = 3;
+    private const int MaxSearchResults = 10;
+
     private readonly IUserRepository _userRepository;
 
     public UsersController(IUserRepository userRepository)
@@ -17,6 +20,7 @@ public class UsersController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize(Policy = "Admin")]
     public async Task<IActionResult> GetAll([FromQuery] int? page, [FromQuery] int? pageSize)
     {
         if (page is null && pageSize is null)
@@ -34,5 +38,16 @@ public class UsersController : ControllerBase
             Page = page ?? 1,
             PageSize = pageSize ?? 20
         });
+    }
+
+    [HttpGet("search")]
+    public async Task<IActionResult> Search([FromQuery] string query)
+    {
+        if (string.IsNullOrWhiteSpace(query) || query.Trim().Length < MinSearchQueryLength)
+            return Ok(Array.Empty<object>());
+
+        var users = await _userRepository.SearchByEmailAsync(query.Trim(), MaxSearchResults);
+        var result = users.Select(u => new { u.Id, u.Email });
+        return Ok(result);
     }
 }

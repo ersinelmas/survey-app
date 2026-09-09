@@ -1,7 +1,9 @@
 import axiosInstance from './axiosInstance';
-import type { User } from '../types/user';
+import type { UserSearchResult } from '../types/user';
 
-export const getUsers = async (): Promise<User[]> => {
-    const response = await axiosInstance.get<User[]>('/Users');
+export const searchUsers = async (query: string): Promise<UserSearchResult[]> => {
+    const response = await axiosInstance.get<UserSearchResult[]>('/Users/search', {
+        params: { query },
+    });
     return response.data;
 };
