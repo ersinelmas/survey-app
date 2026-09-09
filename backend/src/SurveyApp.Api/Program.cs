@@ -107,9 +107,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy("SuperAdmin", policy =>
-        policy.RequireRole("Admin")
-              .RequireAssertion(ctx => ctx.User.FindFirst("IsSuperAdmin")?.Value == "true"));
+    options.AddPolicy("Admin", policy =>
+        policy.RequireAssertion(ctx => ctx.User.FindFirst("IsAdmin")?.Value == "true"));
 });
 builder.Services.AddSingleton<Microsoft.AspNetCore.Authorization.IAuthorizationMiddlewareResultHandler,
     SurveyApp.Api.Middleware.CustomAuthorizationMiddlewareResultHandler>();
@@ -198,7 +197,7 @@ using (var scope = app.Services.CreateScope())
 
     context.Database.Migrate();
 
-    void SeedAdmin(string configSection, bool isSuperAdmin, bool required)
+    void SeedAdmin(string configSection, bool required)
     {
         var email = builder.Configuration[$"{configSection}:Email"];
         var password = builder.Configuration[$"{configSection}:Password"];
@@ -222,18 +221,16 @@ using (var scope = app.Services.CreateScope())
             Id = Guid.NewGuid(),
             Email = email,
             PasswordHash = passwordHasher.Hash(password),
-            Role = SurveyApp.Core.Entities.UserRole.Admin,
-            IsSuperAdmin = isSuperAdmin
+            IsAdmin = true
         };
 
         context.Users.Add(admin);
         context.SaveChanges();
 
-        Console.WriteLine($"Seed: Admin kullanıcı oluşturuldu -> {email} (SuperAdmin: {isSuperAdmin})");
+        Console.WriteLine($"Seed: Admin kullanıcı oluşturuldu -> {email}");
     }
 
-    SeedAdmin("AdminSeed", isSuperAdmin: false, required: true);
-    SeedAdmin("SuperAdminSeed", isSuperAdmin: true, required: false);
+    SeedAdmin("AdminSeed", required: true);
 }
 
 app.Run();

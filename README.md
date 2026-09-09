@@ -42,7 +42,7 @@ Kullanıcıların anket oluşturmasına, yönetmesine ve cevaplamasına olanak t
 - **DTO ayrımı**: Her CRUD işlemi için ayrı request/response DTO'ları kullanıldı (örn. `CreateXRequest`, `UpdateXRequest`, `XDto`), entity'ler API sınırının dışına hiç çıkmıyor.
 - **Veri bütünlüğü**: Kullanılan bir soru veya cevap şablonu silinemez (referential integrity kontrolü uygulama katmanında yapılıyor). Bir anketin kullanıcı ataması güncellenirken, daha önce tamamlanmış atamalar korunuyor, sadece fark eden kayıtlar eklenip/çıkarılıyor.
 - **Güvenlik**: JWT access token'lar 60 dakika geçerli; süresi dolunca frontend, refresh token ile sessizce yeni bir token alır (kullanıcı fark etmez), refresh token da geçersizse otomatik çıkış yapılır. Refresh token'lar rotation ile korunur (her kullanımda eskisi geçersiz kılınıp yenisi üretilir).
-- **Demo Admin / Süper Admin ayrımı**: Halka açık demo ortamında paylaşılan admin hesabı (`IsSuperAdmin=false`) silme işlemleri yapamaz; bu, herkese açık demo giriş bilgilerinin kayıtlı kullanıcı verilerine zarar vermesini engeller. Tam yetkili ikinci bir admin hesabı yalnızca özel ortam değişkenleriyle (`SuperAdminSeed:*`) oluşturulur ve paylaşılmaz.
+- **Rol modeli**: Uygulama, içerik sahipliğini rol yerine kullanıcı bazlı sahiplik (`OwnerId`) üzerinden yönetecek şekilde yeniden tasarlanıyor — her kullanıcı kendi anket/soru/şablonunu oluşturur ve yönetir. `IsAdmin` bayrağı artık içerik yetkisiyle değil, sadece platform yönetimiyle (kullanıcı listesi vb.) ilgilidir; tek bir admin hesabı `AdminSeed:*` ortam değişkenleriyle oluşturulur.
 
 ## Kurulum ve Çalıştırma (Local Geliştirme)
 

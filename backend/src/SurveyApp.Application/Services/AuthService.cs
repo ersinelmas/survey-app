@@ -41,8 +41,7 @@ public class AuthService
         {
             Id = Guid.NewGuid(),
             Email = request.Email,
-            PasswordHash = _passwordHasher.Hash(request.Password),
-            Role = UserRole.User
+            PasswordHash = _passwordHasher.Hash(request.Password)
         };
 
         await _userRepository.AddAsync(user);
@@ -132,7 +131,7 @@ public class AuthService
             Token = accessToken,
             RefreshToken = refreshToken.Token,
             Email = user.Email,
-            Role = user.Role.ToString()
+            IsAdmin = user.IsAdmin
         };
     }
 

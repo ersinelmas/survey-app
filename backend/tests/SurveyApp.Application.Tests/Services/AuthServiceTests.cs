@@ -39,7 +39,7 @@ public class AuthServiceTests
         Assert.Equal("new@user.com", result.Email);
         Assert.Equal("fake-access-token", result.Token);
         Assert.NotEmpty(result.RefreshToken);
-        _userRepository.Verify(r => r.AddAsync(It.Is<User>(u => u.Email == "new@user.com" && u.Role == UserRole.User)), Times.Once);
+        _userRepository.Verify(r => r.AddAsync(It.Is<User>(u => u.Email == "new@user.com" && !u.IsAdmin)), Times.Once);
         _refreshTokenRepository.Verify(r => r.AddAsync(It.IsAny<RefreshToken>()), Times.Once);
     }
 
@@ -57,13 +57,13 @@ public class AuthServiceTests
     [Fact]
     public async Task LoginAsync_WithCorrectCredentials_ReturnsTokens()
     {
-        var user = new User { Id = Guid.NewGuid(), Email = "user@user.com", PasswordHash = "hashed", Role = UserRole.Admin };
+        var user = new User { Id = Guid.NewGuid(), Email = "user@user.com", PasswordHash = "hashed", IsAdmin = true };
         _userRepository.Setup(r => r.GetByEmailAsync("user@user.com")).ReturnsAsync(user);
         _passwordHasher.Setup(p => p.Verify("correct-password", "hashed")).Returns(true);
 
         var result = await _sut.LoginAsync(new LoginRequest { Email = "user@user.com", Password = "correct-password" });
 
-        Assert.Equal("Admin", result.Role);
+        Assert.True(result.IsAdmin);
         Assert.Equal("fake-access-token", result.Token);
     }
 

@@ -50,14 +50,7 @@ public class AuthController : ControllerBase
     public IActionResult Me()
     {
         var email = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
-        var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
-        return Ok(new { email, role });
-    }
-
-    [HttpGet("admin-only")]
-    [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
-    public IActionResult AdminOnly()
-    {
-        return Ok(new { message = "Bu sadece Admin'lerin görebileceği bir alan." });
+        var isAdmin = User.FindFirst("IsAdmin")?.Value == "true";
+        return Ok(new { email, isAdmin });
     }
 }

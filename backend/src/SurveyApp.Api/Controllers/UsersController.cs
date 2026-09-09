@@ -6,7 +6,7 @@ namespace SurveyApp.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = "Admin")]
+[Authorize(Policy = "Admin")]
 public class UsersController : ControllerBase
 {
     private readonly IUserRepository _userRepository;
@@ -17,25 +17,19 @@ public class UsersController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll([FromQuery] string? role, [FromQuery] int? page, [FromQuery] int? pageSize)
+    public async Task<IActionResult> GetAll([FromQuery] int? page, [FromQuery] int? pageSize)
     {
         if (page is null && pageSize is null)
         {
             var users = await _userRepository.GetAllAsync();
-
-            if (!string.IsNullOrEmpty(role))
-            {
-                users = users.Where(u => u.Role.ToString() == role).ToList();
-            }
-
-            var result = users.Select(u => new { u.Id, u.Email, Role = u.Role.ToString() });
+            var result = users.Select(u => new { u.Id, u.Email, u.IsAdmin });
             return Ok(result);
         }
 
-        var (items, totalCount) = await _userRepository.GetPagedAsync(Math.Max(page ?? 1, 1), Math.Clamp(pageSize ?? 20, 1, 100), role);
+        var (items, totalCount) = await _userRepository.GetPagedAsync(Math.Max(page ?? 1, 1), Math.Clamp(pageSize ?? 20, 1, 100));
         return Ok(new
         {
-            Items = items.Select(u => new { u.Id, u.Email, Role = u.Role.ToString() }),
+            Items = items.Select(u => new { u.Id, u.Email, u.IsAdmin }),
             TotalCount = totalCount,
             Page = page ?? 1,
             PageSize = pageSize ?? 20

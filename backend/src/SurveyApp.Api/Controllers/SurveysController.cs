@@ -7,7 +7,7 @@ namespace SurveyApp.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = "Admin")]
+[Authorize]
 public class SurveysController : ControllerBase
 {
     private readonly SurveyService _service;
@@ -52,7 +52,6 @@ public class SurveysController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    [Authorize(Policy = "SuperAdmin")]
     public async Task<IActionResult> Delete(Guid id)
     {
         await _service.DeleteAsync(id);

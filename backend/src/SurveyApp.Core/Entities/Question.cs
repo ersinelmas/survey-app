@@ -9,4 +9,6 @@ public class Question
     public AnswerTemplate AnswerTemplate { get; set; } = null!;
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public Guid? OwnerId { get; set; }
+    public User? Owner { get; set; }
 }

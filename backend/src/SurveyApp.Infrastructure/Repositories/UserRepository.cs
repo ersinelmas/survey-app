@@ -16,16 +16,9 @@ public class UserRepository : GenericRepository<User>, IUserRepository
         return await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
     }
 
-    public async Task<(List<User> Items, int TotalCount)> GetPagedAsync(int page, int pageSize, string? role)
+    public new async Task<(List<User> Items, int TotalCount)> GetPagedAsync(int page, int pageSize)
     {
         var query = _context.Users.AsQueryable();
-
-        if (!string.IsNullOrEmpty(role))
-        {
-            query = Enum.TryParse<UserRole>(role, out var parsedRole)
-                ? query.Where(u => u.Role == parsedRole)
-                : query.Where(u => false);
-        }
 
         var totalCount = await query.CountAsync();
         var items = await query

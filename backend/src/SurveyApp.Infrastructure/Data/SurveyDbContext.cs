@@ -35,6 +35,24 @@ public class SurveyDbContext : DbContext
             .HasIndex(o => new { o.AnswerTemplateId, o.Text })
             .IsUnique();
 
+        modelBuilder.Entity<AnswerTemplate>()
+            .HasOne(t => t.Owner)
+            .WithMany()
+            .HasForeignKey(t => t.OwnerId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Question>()
+            .HasOne(q => q.Owner)
+            .WithMany()
+            .HasForeignKey(q => q.OwnerId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Survey>()
+            .HasOne(s => s.Owner)
+            .WithMany()
+            .HasForeignKey(s => s.OwnerId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         modelBuilder.Entity<SurveyAssignment>()
             .HasIndex(sa => new { sa.SurveyId, sa.UserId })
             .IsUnique();

@@ -9,6 +9,8 @@ public class Survey
     public DateTime EndDate { get; set; }
     public bool IsActive { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public Guid? OwnerId { get; set; }
+    public User? Owner { get; set; }
 
     public ICollection<SurveyQuestion> SurveyQuestions { get; set; } = new List<SurveyQuestion>();
     public ICollection<SurveyAssignment> Assignments { get; set; } = new List<SurveyAssignment>();
