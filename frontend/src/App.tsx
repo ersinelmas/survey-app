@@ -10,6 +10,7 @@ import AnswerTemplatesPage from './pages/AnswerTemplatesPage';
 import QuestionsPage from './pages/QuestionsPage';
 import SurveysPage from './pages/SurveysPage';
 import FillSurveyPage from './pages/FillSurveyPage';
+import PublicFillSurveyPage from './pages/PublicFillSurveyPage';
 import SurveyReportPage from './pages/SurveyReportPage';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 
@@ -22,6 +23,7 @@ function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/privacy" element={<PrivacyPolicyPage />} />
+            <Route path="/public/surveys/:surveyId" element={<PublicFillSurveyPage />} />
             <Route
               path="/"
               element={

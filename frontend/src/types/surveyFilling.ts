@@ -31,3 +31,16 @@ export interface SubmitAnswer {
 export interface SubmitSurveyRequest {
     answers: SubmitAnswer[];
 }
+
+export interface PublicSurveyDetail {
+    surveyId: string;
+    title: string;
+    description: string;
+    requireLogin: boolean;
+    questions: SurveyFillQuestion[];
+}
+
+export interface SubmitPublicSurveyRequest {
+    answers: SubmitAnswer[];
+    respondentToken: string | null;
+}

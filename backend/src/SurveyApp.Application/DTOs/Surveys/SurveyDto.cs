@@ -8,6 +8,8 @@ public class SurveyDto
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
     public bool IsActive { get; set; }
+    public bool IsPublic { get; set; }
+    public bool RequireLoginForPublicResponses { get; set; }
     public List<SurveyQuestionDto> Questions { get; set; } = new();
     public List<SurveyAssignedUserDto> AssignedUsers { get; set; } = new();
 }

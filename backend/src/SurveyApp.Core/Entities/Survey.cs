@@ -8,6 +8,8 @@ public class Survey
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
     public bool IsActive { get; set; }
+    public bool IsPublic { get; set; }
+    public bool RequireLoginForPublicResponses { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public Guid? OwnerId { get; set; }
     public User? Owner { get; set; }

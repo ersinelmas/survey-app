@@ -62,6 +62,8 @@ public class SurveyService
             StartDate = request.StartDate,
             EndDate = request.EndDate,
             IsActive = request.IsActive,
+            IsPublic = request.IsPublic,
+            RequireLoginForPublicResponses = request.RequireLoginForPublicResponses,
             OwnerId = currentUserId
         };
 
@@ -88,6 +90,8 @@ public class SurveyService
         survey.StartDate = request.StartDate;
         survey.EndDate = request.EndDate;
         survey.IsActive = request.IsActive;
+        survey.IsPublic = request.IsPublic;
+        survey.RequireLoginForPublicResponses = request.RequireLoginForPublicResponses;
 
         _surveyRepository.RemoveSurveyQuestions(survey.SurveyQuestions.ToList());
         await AttachQuestions(survey, request.QuestionIds, currentUserId);
@@ -101,7 +105,8 @@ public class SurveyService
         var toAddUserIds = request.AssignedUserIds.Where(uid => !existingUserIds.Contains(uid)).ToList();
         var existingResponses = await _responseRepository.GetBySurveyIdAsync(survey.Id);
         var lastAnsweredAtByUserId = existingResponses
-            .GroupBy(r => r.UserId)
+            .Where(r => r.UserId.HasValue)
+            .GroupBy(r => r.UserId!.Value)
             .ToDictionary(g => g.Key, g => g.Max(r => r.AnsweredAt));
         await AttachAssignments(survey, toAddUserIds, lastAnsweredAtByUserId);
 
@@ -188,7 +193,7 @@ public class SurveyService
                     .Where(r => r.QuestionId == sq.QuestionId)
                     .Select(r => new UserAnswerDto
                     {
-                        UserEmail = r.User.Email,
+                        UserEmail = r.User?.Email ?? "Anonim",
                         SelectedOptionText = r.SelectedOption.Text
                     }).ToList()
             }).ToList();
@@ -203,7 +208,7 @@ public class SurveyService
                 IsRemovedFromSurvey = true,
                 UserAnswers = g.Select(r => new UserAnswerDto
                 {
-                    UserEmail = r.User.Email,
+                    UserEmail = r.User?.Email ?? "Anonim",
                     SelectedOptionText = r.SelectedOption.Text
                 }).ToList()
             });
@@ -248,6 +253,8 @@ public class SurveyService
             StartDate = survey.StartDate,
             EndDate = survey.EndDate,
             IsActive = survey.IsActive,
+            IsPublic = survey.IsPublic,
+            RequireLoginForPublicResponses = survey.RequireLoginForPublicResponses,
             Questions = survey.SurveyQuestions
                 .OrderBy(sq => sq.Order)
                 .Select(sq => new SurveyQuestionDto

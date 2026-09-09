@@ -17,6 +17,8 @@ export interface Survey {
     startDate: string;
     endDate: string;
     isActive: boolean;
+    isPublic: boolean;
+    requireLoginForPublicResponses: boolean;
     questions: SurveyQuestionItem[];
     assignedUsers: SurveyAssignedUser[];
 }
@@ -27,6 +29,8 @@ export interface CreateSurveyRequest {
     startDate: string;
     endDate: string;
     isActive: boolean;
+    isPublic: boolean;
+    requireLoginForPublicResponses: boolean;
     questionIds: string[];
     assignedUserIds: string[];
 }

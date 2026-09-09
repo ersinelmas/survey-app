@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { Box, Button, TextField, Typography, Alert, Paper, Divider } from '@mui/material';
 import { useAuth } from '../context/AuthContext';
 import { extractErrorMessage } from '../api/errorHelper';
@@ -10,13 +10,14 @@ function LoginPage() {
     const [error, setError] = useState('');
     const { login } = useAuth();
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
         try {
             await login({ email, password });
-            navigate('/');
+            navigate(searchParams.get('redirect') || '/');
         } catch (err) {
             setError(extractErrorMessage(err));
         }

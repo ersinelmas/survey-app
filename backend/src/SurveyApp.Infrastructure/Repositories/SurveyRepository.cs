@@ -49,6 +49,13 @@ public class SurveyRepository : GenericRepository<Survey>, ISurveyRepository
             .FirstOrDefaultAsync(s => s.Id == id);
     }
 
+    public async Task<Survey?> GetByIdForFillingAsync(Guid id)
+    {
+        return await _context.Surveys
+            .Include(s => s.SurveyQuestions).ThenInclude(sq => sq.Question).ThenInclude(q => q.AnswerTemplate).ThenInclude(at => at.Options)
+            .FirstOrDefaultAsync(s => s.Id == id);
+    }
+
     public void RemoveSurveyQuestions(IEnumerable<SurveyQuestion> items)
     {
         _context.SurveyQuestions.RemoveRange(items);

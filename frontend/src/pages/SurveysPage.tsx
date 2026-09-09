@@ -4,7 +4,7 @@ import {
     Paper, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, TextField,
     Typography, Autocomplete, Chip, Switch, FormControlLabel, Alert, TablePagination,
 } from '@mui/material';
-import { Add, Edit, Delete, Assessment } from '@mui/icons-material';
+import { Add, Edit, Delete, Assessment, Link as LinkIcon } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import EmptyState from '../components/EmptyState';
@@ -33,7 +33,7 @@ function getDateStatusLabel(survey: Survey): string | null {
 
 function SurveysPage() {
     const navigate = useNavigate();
-    const { showError } = useSnackbar();
+    const { showError, showSuccess } = useSnackbar();
     const {
         items: surveys, page, setPage, pageSize, setPageSize, totalCount,
         dialogOpen, setDialogOpen, editingId, setEditingId,
@@ -51,8 +51,20 @@ function SurveysPage() {
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
     const [isActive, setIsActive] = useState(true);
+    const [isPublic, setIsPublic] = useState(false);
+    const [requireLoginForPublicResponses, setRequireLoginForPublicResponses] = useState(false);
     const [selectedQuestions, setSelectedQuestions] = useState<Question[]>([]);
     const [selectedUsers, setSelectedUsers] = useState<User[]>([]);
+
+    const copyPublicLink = async (surveyId: string) => {
+        const link = `${window.location.origin}/public/surveys/${surveyId}`;
+        try {
+            await navigator.clipboard.writeText(link);
+            showSuccess('Link kopyalandı.');
+        } catch {
+            showError('Link kopyalanamadı.');
+        }
+    };
 
     useEffect(() => {
         Promise.all([getQuestions(), getUsers()])
@@ -70,6 +82,8 @@ function SurveysPage() {
         setStartDate('');
         setEndDate('');
         setIsActive(true);
+        setIsPublic(false);
+        setRequireLoginForPublicResponses(false);
         setSelectedQuestions([]);
         setSelectedUsers([]);
         setError('');
@@ -83,6 +97,8 @@ function SurveysPage() {
         setStartDate(survey.startDate.slice(0, 10));
         setEndDate(survey.endDate.slice(0, 10));
         setIsActive(survey.isActive);
+        setIsPublic(survey.isPublic);
+        setRequireLoginForPublicResponses(survey.requireLoginForPublicResponses);
         setSelectedQuestions(
             survey.questions
                 .sort((a, b) => a.order - b.order)
@@ -110,6 +126,8 @@ function SurveysPage() {
                 startDate: `${startDate}T00:00:00.000Z`,
                 endDate: `${endDate}T23:59:59.999Z`,
                 isActive,
+                isPublic,
+                requireLoginForPublicResponses: isPublic && requireLoginForPublicResponses,
                 questionIds: selectedQuestions.map((q) => q.id),
                 assignedUserIds: selectedUsers.map((u) => u.id),
             };
@@ -172,6 +190,11 @@ function SurveysPage() {
                                         {survey.questions.length} soru / {survey.assignedUsers.length} kullanıcı
                                     </TableCell>
                                     <TableCell align="right">
+                                        {survey.isPublic && (
+                                            <IconButton onClick={() => copyPublicLink(survey.id)} title="Herkese açık linki kopyala">
+                                                <LinkIcon fontSize="small" />
+                                            </IconButton>
+                                        )}
                                         <IconButton onClick={() => navigate(`/surveys/${survey.id}/report`)}>
                                             <Assessment fontSize="small" />
                                         </IconButton>
@@ -247,6 +270,22 @@ function SurveysPage() {
                         control={<Switch checked={isActive} onChange={(e) => setIsActive(e.target.checked)} />}
                         label="Aktif"
                     />
+                    <FormControlLabel
+                        control={<Switch checked={isPublic} onChange={(e) => setIsPublic(e.target.checked)} />}
+                        label="Herkese açık link ile paylaş"
+                    />
+                    {isPublic && (
+                        <FormControlLabel
+                            sx={{ ml: 2 }}
+                            control={
+                                <Switch
+                                    checked={requireLoginForPublicResponses}
+                                    onChange={(e) => setRequireLoginForPublicResponses(e.target.checked)}
+                                />
+                            }
+                            label="Yanıtlamak için üyelik gerektir"
+                        />
+                    )}
                     <Autocomplete
                         multiple
                         options={questions}

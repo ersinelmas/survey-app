@@ -1,28 +1,37 @@
 import { createContext, useContext, useState, type ReactNode } from 'react';
-import { Snackbar, Alert } from '@mui/material';
+import { Snackbar, Alert, type AlertColor } from '@mui/material';
 
 interface SnackbarContextType {
     showError: (message: string) => void;
+    showSuccess: (message: string) => void;
 }
 
 const SnackbarContext = createContext<SnackbarContextType | undefined>(undefined);
 
 export function SnackbarProvider({ children }: { children: ReactNode }) {
     const [message, setMessage] = useState('');
+    const [severity, setSeverity] = useState<AlertColor>('error');
     const [open, setOpen] = useState(false);
 
     const showError = (msg: string) => {
         setMessage(msg);
+        setSeverity('error');
+        setOpen(true);
+    };
+
+    const showSuccess = (msg: string) => {
+        setMessage(msg);
+        setSeverity('success');
         setOpen(true);
     };
 
     const handleClose = () => setOpen(false);
 
     return (
-        <SnackbarContext.Provider value={{ showError }}>
+        <SnackbarContext.Provider value={{ showError, showSuccess }}>
             {children}
             <Snackbar open={open} autoHideDuration={5000} onClose={handleClose}>
-                <Alert onClose={handleClose} severity="error" sx={{ width: '100%' }}>
+                <Alert onClose={handleClose} severity={severity} sx={{ width: '100%' }}>
                     {message}
                 </Alert>
             </Snackbar>

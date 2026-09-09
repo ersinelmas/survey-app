@@ -13,4 +13,10 @@ public static class ClaimsPrincipalExtensions
     {
         return user.FindFirstValue("IsAdmin") == "true";
     }
+
+    public static Guid? TryGetUserId(this ClaimsPrincipal user)
+    {
+        var value = user.FindFirstValue(ClaimTypes.NameIdentifier);
+        return Guid.TryParse(value, out var id) ? id : null;
+    }
 }

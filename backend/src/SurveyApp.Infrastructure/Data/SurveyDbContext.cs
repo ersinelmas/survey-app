@@ -59,5 +59,16 @@ public class SurveyDbContext : DbContext
         modelBuilder.Entity<SurveyResponse>()
             .HasIndex(sr => new { sr.SurveyId, sr.UserId, sr.QuestionId })
             .IsUnique();
+
+        modelBuilder.Entity<SurveyResponse>()
+            .HasIndex(sr => new { sr.SurveyId, sr.RespondentToken, sr.QuestionId })
+            .IsUnique()
+            .HasFilter("\"RespondentToken\" IS NOT NULL");
+
+        modelBuilder.Entity<SurveyResponse>()
+            .HasOne(sr => sr.User)
+            .WithMany()
+            .HasForeignKey(sr => sr.UserId)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }

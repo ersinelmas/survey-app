@@ -10,15 +10,17 @@ namespace SurveyApp.Application.Tests.Services;
 public class SurveyFillingServiceTests
 {
     private readonly Mock<ISurveyAssignmentRepository> _assignmentRepository = new();
+    private readonly Mock<ISurveyRepository> _surveyRepository = new();
     private readonly Mock<ISurveyResponseRepository> _responseRepository = new();
     private readonly SurveyFillingService _sut;
 
     public SurveyFillingServiceTests()
     {
-        _sut = new SurveyFillingService(_assignmentRepository.Object, _responseRepository.Object);
+        _sut = new SurveyFillingService(_assignmentRepository.Object, _surveyRepository.Object, _responseRepository.Object);
+        _responseRepository.Setup(r => r.HasRespondedAsync(It.IsAny<Guid>(), It.IsAny<Guid?>(), It.IsAny<string?>())).ReturnsAsync(false);
     }
 
-    private static Survey CreateActiveSurvey(string title = "Memnuniyet Anketi")
+    private static Survey CreateActiveSurvey(string title = "Memnuniyet Anketi", bool isPublic = false, bool requireLoginForPublicResponses = false)
     {
         return new Survey
         {
@@ -28,6 +30,8 @@ public class SurveyFillingServiceTests
             IsActive = true,
             StartDate = DateTime.UtcNow.AddDays(-1),
             EndDate = DateTime.UtcNow.AddDays(1),
+            IsPublic = isPublic,
+            RequireLoginForPublicResponses = requireLoginForPublicResponses,
         };
     }
 
@@ -228,5 +232,119 @@ public class SurveyFillingServiceTests
         _responseRepository.Verify(r => r.SaveChangesAsync(), Times.Once);
         Assert.True(assignment.IsCompleted);
         Assert.NotNull(assignment.CompletedAt);
+    }
+
+    [Fact]
+    public async Task GetPublicSurveyAsync_WhenNotPublic_ThrowsKeyNotFoundException()
+    {
+        var survey = CreateActiveSurvey(isPublic: false);
+        _surveyRepository.Setup(r => r.GetByIdForFillingAsync(survey.Id)).ReturnsAsync(survey);
+
+        await Assert.ThrowsAsync<KeyNotFoundException>(() => _sut.GetPublicSurveyAsync(survey.Id, currentUserId: null));
+    }
+
+    [Fact]
+    public async Task GetPublicSurveyAsync_WhenOutsideDateRange_ThrowsInvalidOperationException()
+    {
+        var survey = CreateActiveSurvey(isPublic: true);
+        survey.StartDate = DateTime.UtcNow.AddDays(2);
+        survey.EndDate = DateTime.UtcNow.AddDays(5);
+        _surveyRepository.Setup(r => r.GetByIdForFillingAsync(survey.Id)).ReturnsAsync(survey);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => _sut.GetPublicSurveyAsync(survey.Id, currentUserId: null));
+    }
+
+    [Fact]
+    public async Task GetPublicSurveyAsync_WhenRequiresLoginAndCallerAnonymous_ReturnsFlagWithoutQuestions()
+    {
+        var survey = CreateActiveSurvey(isPublic: true, requireLoginForPublicResponses: true);
+        var question = CreateQuestionWithOptions(Guid.NewGuid());
+        survey.SurveyQuestions = new List<SurveyQuestion> { new() { SurveyId = survey.Id, QuestionId = question.Id, Question = question } };
+        _surveyRepository.Setup(r => r.GetByIdForFillingAsync(survey.Id)).ReturnsAsync(survey);
+
+        var result = await _sut.GetPublicSurveyAsync(survey.Id, currentUserId: null);
+
+        Assert.True(result.RequireLogin);
+        Assert.Empty(result.Questions);
+    }
+
+    [Fact]
+    public async Task GetPublicSurveyAsync_WhenNoLoginRequired_ReturnsQuestionsForAnonymousCaller()
+    {
+        var survey = CreateActiveSurvey(isPublic: true, requireLoginForPublicResponses: false);
+        var question = CreateQuestionWithOptions(Guid.NewGuid());
+        survey.SurveyQuestions = new List<SurveyQuestion> { new() { SurveyId = survey.Id, QuestionId = question.Id, Question = question } };
+        _surveyRepository.Setup(r => r.GetByIdForFillingAsync(survey.Id)).ReturnsAsync(survey);
+
+        var result = await _sut.GetPublicSurveyAsync(survey.Id, currentUserId: null);
+
+        Assert.False(result.RequireLogin);
+        Assert.Single(result.Questions);
+    }
+
+    [Fact]
+    public async Task SubmitPublicAsync_WhenRequiresLoginAndCallerAnonymous_ThrowsUnauthorizedAccessException()
+    {
+        var survey = CreateActiveSurvey(isPublic: true, requireLoginForPublicResponses: true);
+        _surveyRepository.Setup(r => r.GetByIdForFillingAsync(survey.Id)).ReturnsAsync(survey);
+
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(
+            () => _sut.SubmitPublicAsync(survey.Id, currentUserId: null, new SubmitPublicSurveyRequest()));
+    }
+
+    [Fact]
+    public async Task SubmitPublicAsync_WhenAlreadyRespondedViaToken_ThrowsInvalidOperationException()
+    {
+        var survey = CreateActiveSurvey(isPublic: true);
+        _surveyRepository.Setup(r => r.GetByIdForFillingAsync(survey.Id)).ReturnsAsync(survey);
+        _responseRepository.Setup(r => r.HasRespondedAsync(survey.Id, null, "token-123")).ReturnsAsync(true);
+
+        var request = new SubmitPublicSurveyRequest { RespondentToken = "token-123" };
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => _sut.SubmitPublicAsync(survey.Id, currentUserId: null, request));
+    }
+
+    [Fact]
+    public async Task SubmitPublicAsync_WhenAnonymousAndValid_StoresResponseWithRespondentTokenAndNoUserId()
+    {
+        var survey = CreateActiveSurvey(isPublic: true);
+        var selectedOptionId = Guid.NewGuid();
+        var question = CreateQuestionWithOptions(selectedOptionId, Guid.NewGuid());
+        survey.SurveyQuestions = new List<SurveyQuestion> { new() { SurveyId = survey.Id, QuestionId = question.Id, Question = question } };
+        _surveyRepository.Setup(r => r.GetByIdForFillingAsync(survey.Id)).ReturnsAsync(survey);
+
+        var request = new SubmitPublicSurveyRequest
+        {
+            Answers = new List<SubmitAnswerDto> { new() { QuestionId = question.Id, SelectedOptionId = selectedOptionId } },
+            RespondentToken = "token-123",
+        };
+
+        await _sut.SubmitPublicAsync(survey.Id, currentUserId: null, request);
+
+        _responseRepository.Verify(r => r.AddRangeAsync(It.Is<IEnumerable<SurveyResponse>>(
+            responses => responses.Single().UserId == null && responses.Single().RespondentToken == "token-123")), Times.Once);
+        _responseRepository.Verify(r => r.SaveChangesAsync(), Times.Once);
+    }
+
+    [Fact]
+    public async Task SubmitPublicAsync_WhenLoggedIn_StoresResponseWithUserIdAndNoToken()
+    {
+        var survey = CreateActiveSurvey(isPublic: true);
+        var userId = Guid.NewGuid();
+        var selectedOptionId = Guid.NewGuid();
+        var question = CreateQuestionWithOptions(selectedOptionId, Guid.NewGuid());
+        survey.SurveyQuestions = new List<SurveyQuestion> { new() { SurveyId = survey.Id, QuestionId = question.Id, Question = question } };
+        _surveyRepository.Setup(r => r.GetByIdForFillingAsync(survey.Id)).ReturnsAsync(survey);
+
+        var request = new SubmitPublicSurveyRequest
+        {
+            Answers = new List<SubmitAnswerDto> { new() { QuestionId = question.Id, SelectedOptionId = selectedOptionId } },
+            RespondentToken = "token-ignored",
+        };
+
+        await _sut.SubmitPublicAsync(survey.Id, userId, request);
+
+        _responseRepository.Verify(r => r.AddRangeAsync(It.Is<IEnumerable<SurveyResponse>>(
+            responses => responses.Single().UserId == userId && responses.Single().RespondentToken == null)), Times.Once);
     }
 }

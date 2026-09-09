@@ -43,4 +43,15 @@ public class SurveyResponseRepository : ISurveyResponseRepository
     {
         return await _context.SurveyResponses.AnyAsync(r => r.QuestionId == questionId);
     }
+
+    public async Task<bool> HasRespondedAsync(Guid surveyId, Guid? userId, string? respondentToken)
+    {
+        if (userId.HasValue)
+            return await _context.SurveyResponses.AnyAsync(r => r.SurveyId == surveyId && r.UserId == userId.Value);
+
+        if (string.IsNullOrEmpty(respondentToken))
+            return false;
+
+        return await _context.SurveyResponses.AnyAsync(r => r.SurveyId == surveyId && r.RespondentToken == respondentToken);
+    }
 }
