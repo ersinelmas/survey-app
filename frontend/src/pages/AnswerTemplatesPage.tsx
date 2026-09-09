@@ -2,23 +2,24 @@ import { useState } from 'react';
 import {
     Box, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
     Paper, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, TextField,
-    Typography, Chip,
+    Typography, Chip, TablePagination,
 } from '@mui/material';
 import { Add, Edit, Delete } from '@mui/icons-material';
 import Layout from '../components/Layout';
 import EmptyState from '../components/EmptyState';
 import {
-    getAnswerTemplates, createAnswerTemplate, updateAnswerTemplate, deleteAnswerTemplate,
+    getAnswerTemplatesPaged, createAnswerTemplate, updateAnswerTemplate, deleteAnswerTemplate,
 } from '../api/answerTemplateApi';
 import type { AnswerTemplate, UpdateAnswerOptionRequest } from '../types/answerTemplate';
 import { useCrudPage } from '../hooks/useCrudPage';
 
 function AnswerTemplatesPage() {
     const {
-        items: templates, dialogOpen, setDialogOpen, editingId, setEditingId,
+        items: templates, page, setPage, pageSize, setPageSize, totalCount,
+        dialogOpen, setDialogOpen, editingId, setEditingId,
         error, setError, saving, handleDelete, runSave,
     } = useCrudPage<AnswerTemplate>({
-        fetchAll: getAnswerTemplates,
+        fetchPage: getAnswerTemplatesPaged,
         remove: deleteAnswerTemplate,
         deleteConfirmMessage: 'Bu cevap şablonunu silmek istediğinize emin misiniz?',
     });
@@ -84,7 +85,7 @@ function AnswerTemplatesPage() {
                 </Button>
             </Box>
 
-            {templates.length === 0 ? (
+            {totalCount === 0 ? (
                 <EmptyState message="Henüz bir cevap şablonu tanımlanmamış." />
             ) : (
                 <TableContainer component={Paper}>
@@ -119,6 +120,17 @@ function AnswerTemplatesPage() {
                             ))}
                         </TableBody>
                     </Table>
+                    <TablePagination
+                        component="div"
+                        count={totalCount}
+                        page={page - 1}
+                        onPageChange={(_, newPage) => setPage(newPage + 1)}
+                        rowsPerPage={pageSize}
+                        onRowsPerPageChange={(e) => setPageSize(parseInt(e.target.value, 10))}
+                        rowsPerPageOptions={[10, 20, 50]}
+                        labelRowsPerPage="Sayfa başına"
+                        labelDisplayedRows={({ from, to, count }) => `${from}-${to} / ${count}`}
+                    />
                 </TableContainer>
             )}
 

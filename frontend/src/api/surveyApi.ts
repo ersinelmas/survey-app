@@ -1,8 +1,16 @@
 import axiosInstance from './axiosInstance';
 import type { Survey, CreateSurveyRequest, UpdateSurveyRequest, SurveyReport } from '../types/survey';
+import type { PagedResult } from '../types/common';
 
 export const getSurveys = async (): Promise<Survey[]> => {
     const response = await axiosInstance.get<Survey[]>('/Surveys');
+    return response.data;
+};
+
+export const getSurveysPaged = async (page: number, pageSize: number): Promise<PagedResult<Survey>> => {
+    const response = await axiosInstance.get<PagedResult<Survey>>('/Surveys', {
+        params: { page, pageSize },
+    });
     return response.data;
 };
 

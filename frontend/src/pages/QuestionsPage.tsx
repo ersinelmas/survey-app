@@ -2,12 +2,12 @@ import { useEffect, useState } from 'react';
 import {
     Box, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
     Paper, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, TextField,
-    Typography, MenuItem,
+    Typography, MenuItem, TablePagination,
 } from '@mui/material';
 import { Add, Edit, Delete } from '@mui/icons-material';
 import Layout from '../components/Layout';
 import EmptyState from '../components/EmptyState';
-import { getQuestions, createQuestion, updateQuestion, deleteQuestion } from '../api/questionApi';
+import { getQuestionsPaged, createQuestion, updateQuestion, deleteQuestion } from '../api/questionApi';
 import { getAnswerTemplates } from '../api/answerTemplateApi';
 import type { Question } from '../types/question';
 import type { AnswerTemplate } from '../types/answerTemplate';
@@ -18,10 +18,11 @@ import { extractErrorMessage } from '../api/errorHelper';
 function QuestionsPage() {
     const { showError } = useSnackbar();
     const {
-        items: questions, dialogOpen, setDialogOpen, editingId, setEditingId,
+        items: questions, page, setPage, pageSize, setPageSize, totalCount,
+        dialogOpen, setDialogOpen, editingId, setEditingId,
         error, setError, saving, handleDelete, runSave,
     } = useCrudPage<Question>({
-        fetchAll: getQuestions,
+        fetchPage: getQuestionsPaged,
         remove: deleteQuestion,
         deleteConfirmMessage: 'Bu soruyu silmek istediğinize emin misiniz?',
     });
@@ -74,7 +75,7 @@ function QuestionsPage() {
                 </Button>
             </Box>
 
-            {questions.length === 0 ? (
+            {totalCount === 0 ? (
                 <EmptyState message="Henüz bir soru oluşturulmamış." />
             ) : (
                 <TableContainer component={Paper}>
@@ -103,6 +104,17 @@ function QuestionsPage() {
                             ))}
                         </TableBody>
                     </Table>
+                    <TablePagination
+                        component="div"
+                        count={totalCount}
+                        page={page - 1}
+                        onPageChange={(_, newPage) => setPage(newPage + 1)}
+                        rowsPerPage={pageSize}
+                        onRowsPerPageChange={(e) => setPageSize(parseInt(e.target.value, 10))}
+                        rowsPerPageOptions={[10, 20, 50]}
+                        labelRowsPerPage="Sayfa başına"
+                        labelDisplayedRows={({ from, to, count }) => `${from}-${to} / ${count}`}
+                    />
                 </TableContainer>
             )}
 

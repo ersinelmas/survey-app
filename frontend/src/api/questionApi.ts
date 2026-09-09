@@ -1,8 +1,16 @@
 import axiosInstance from './axiosInstance';
 import type { Question, CreateQuestionRequest, UpdateQuestionRequest } from '../types/question';
+import type { PagedResult } from '../types/common';
 
 export const getQuestions = async (): Promise<Question[]> => {
     const response = await axiosInstance.get<Question[]>('/Questions');
+    return response.data;
+};
+
+export const getQuestionsPaged = async (page: number, pageSize: number): Promise<PagedResult<Question>> => {
+    const response = await axiosInstance.get<PagedResult<Question>>('/Questions', {
+        params: { page, pageSize },
+    });
     return response.data;
 };
 
