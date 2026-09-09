@@ -1,5 +1,6 @@
 using SurveyApp.Application.DTOs.Common;
 using SurveyApp.Application.DTOs.Questions;
+using SurveyApp.Application.Exceptions;
 using SurveyApp.Core.Entities;
 using SurveyApp.Core.Interfaces;
 
@@ -21,61 +22,65 @@ public class QuestionService
         _responseRepository = responseRepository;
     }
 
-    public async Task<List<QuestionDto>> GetAllAsync()
+    public async Task<List<QuestionDto>> GetAllAsync(Guid currentUserId)
     {
-        var questions = await _questionRepository.GetAllAsync();
-        return questions.Select(MapToDto).ToList();
+        var questions = await _questionRepository.GetAllForUserAsync(currentUserId);
+        return questions.Select(q => MapToDto(q, currentUserId)).ToList();
     }
 
-    public async Task<PagedResult<QuestionDto>> GetPagedAsync(int page, int pageSize)
+    public async Task<PagedResult<QuestionDto>> GetPagedAsync(int page, int pageSize, Guid currentUserId)
     {
-        var (items, totalCount) = await _questionRepository.GetPagedAsync(page, pageSize);
+        var (items, totalCount) = await _questionRepository.GetPagedForUserAsync(currentUserId, page, pageSize);
         return new PagedResult<QuestionDto>
         {
-            Items = items.Select(MapToDto).ToList(),
+            Items = items.Select(q => MapToDto(q, currentUserId)).ToList(),
             TotalCount = totalCount,
             Page = page,
             PageSize = pageSize
         };
     }
 
-    public async Task<QuestionDto> GetByIdAsync(Guid id)
+    public async Task<QuestionDto> GetByIdAsync(Guid id, Guid currentUserId)
     {
         var question = await _questionRepository.GetByIdAsync(id);
-        if (question is null)
+        if (question is null || !IsVisibleTo(question, currentUserId))
             throw new KeyNotFoundException("Soru bulunamadı.");
 
-        return MapToDto(question);
+        return MapToDto(question, currentUserId);
     }
 
-    public async Task<QuestionDto> CreateAsync(CreateQuestionRequest request)
+    public async Task<QuestionDto> CreateAsync(CreateQuestionRequest request, Guid currentUserId)
     {
         var template = await _answerTemplateRepository.GetByIdAsync(request.AnswerTemplateId);
-        if (template is null)
+        if (template is null || !(template.OwnerId is null || template.OwnerId == currentUserId))
             throw new KeyNotFoundException("Belirtilen cevap şablonu bulunamadı.");
 
         var question = new Question
         {
             Id = Guid.NewGuid(),
             Text = request.Text,
-            AnswerTemplateId = request.AnswerTemplateId
+            AnswerTemplateId = request.AnswerTemplateId,
+            OwnerId = currentUserId
         };
 
         await _questionRepository.AddAsync(question);
         await _questionRepository.SaveChangesAsync();
 
         question.AnswerTemplate = template;
-        return MapToDto(question);
+        return MapToDto(question, currentUserId);
     }
 
-    public async Task<QuestionDto> UpdateAsync(Guid id, UpdateQuestionRequest request)
+    public async Task<QuestionDto> UpdateAsync(Guid id, UpdateQuestionRequest request, Guid currentUserId, bool isAdmin)
     {
         var question = await _questionRepository.GetByIdAsync(id);
-        if (question is null)
+        if (question is null || !(isAdmin || IsVisibleTo(question, currentUserId)))
             throw new KeyNotFoundException("Soru bulunamadı.");
 
+        if (!CanModify(question, currentUserId, isAdmin))
+            throw new ForbiddenAccessException("Bu soruyu düzenleme yetkiniz yok.");
+
         var template = await _answerTemplateRepository.GetByIdAsync(request.AnswerTemplateId);
-        if (template is null)
+        if (template is null || !(template.OwnerId is null || template.OwnerId == currentUserId))
             throw new KeyNotFoundException("Belirtilen cevap şablonu bulunamadı.");
 
         if (question.AnswerTemplateId != request.AnswerTemplateId)
@@ -91,14 +96,17 @@ public class QuestionService
 
         await _questionRepository.SaveChangesAsync();
 
-        return MapToDto(question);
+        return MapToDto(question, currentUserId);
     }
 
-    public async Task DeleteAsync(Guid id)
+    public async Task DeleteAsync(Guid id, Guid currentUserId, bool isAdmin)
     {
         var question = await _questionRepository.GetByIdAsync(id);
-        if (question is null)
+        if (question is null || !(isAdmin || IsVisibleTo(question, currentUserId)))
             throw new KeyNotFoundException("Soru bulunamadı.");
+
+        if (!CanModify(question, currentUserId, isAdmin))
+            throw new ForbiddenAccessException("Bu soruyu silme yetkiniz yok.");
 
         var isUsed = await _questionRepository.IsUsedInAnySurveyAsync(id);
         if (isUsed)
@@ -108,14 +116,43 @@ public class QuestionService
         await _questionRepository.SaveChangesAsync();
     }
 
-    private static QuestionDto MapToDto(Question question)
+    public async Task<QuestionDto> DuplicateAsync(Guid id, Guid currentUserId)
+    {
+        var source = await _questionRepository.GetByIdAsync(id);
+        if (source is null || !IsVisibleTo(source, currentUserId))
+            throw new KeyNotFoundException("Soru bulunamadı.");
+
+        var copy = new Question
+        {
+            Id = Guid.NewGuid(),
+            Text = source.Text,
+            AnswerTemplateId = source.AnswerTemplateId,
+            OwnerId = currentUserId
+        };
+
+        await _questionRepository.AddAsync(copy);
+        await _questionRepository.SaveChangesAsync();
+
+        copy.AnswerTemplate = source.AnswerTemplate;
+        return MapToDto(copy, currentUserId);
+    }
+
+    private static bool IsVisibleTo(Question question, Guid userId) =>
+        question.OwnerId is null || question.OwnerId == userId;
+
+    private static bool CanModify(Question question, Guid userId, bool isAdmin) =>
+        isAdmin || question.OwnerId == userId;
+
+    private static QuestionDto MapToDto(Question question, Guid currentUserId)
     {
         return new QuestionDto
         {
             Id = question.Id,
             Text = question.Text,
             AnswerTemplateId = question.AnswerTemplateId,
-            AnswerTemplateName = question.AnswerTemplate.Name
+            AnswerTemplateName = question.AnswerTemplate.Name,
+            IsDefault = question.OwnerId is null,
+            IsMine = question.OwnerId == currentUserId
         };
     }
 }

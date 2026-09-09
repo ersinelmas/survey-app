@@ -1,5 +1,6 @@
 using SurveyApp.Application.DTOs.AnswerTemplates;
 using SurveyApp.Application.DTOs.Common;
+using SurveyApp.Application.Exceptions;
 using SurveyApp.Core.Entities;
 using SurveyApp.Core.Interfaces;
 
@@ -16,39 +17,40 @@ public class AnswerTemplateService
         _responseRepository = responseRepository;
     }
 
-    public async Task<List<AnswerTemplateDto>> GetAllAsync()
+    public async Task<List<AnswerTemplateDto>> GetAllAsync(Guid currentUserId)
     {
-        var templates = await _repository.GetAllAsync();
-        return templates.Select(MapToDto).ToList();
+        var templates = await _repository.GetAllForUserAsync(currentUserId);
+        return templates.Select(t => MapToDto(t, currentUserId)).ToList();
     }
 
-    public async Task<PagedResult<AnswerTemplateDto>> GetPagedAsync(int page, int pageSize)
+    public async Task<PagedResult<AnswerTemplateDto>> GetPagedAsync(int page, int pageSize, Guid currentUserId)
     {
-        var (items, totalCount) = await _repository.GetPagedAsync(page, pageSize);
+        var (items, totalCount) = await _repository.GetPagedForUserAsync(currentUserId, page, pageSize);
         return new PagedResult<AnswerTemplateDto>
         {
-            Items = items.Select(MapToDto).ToList(),
+            Items = items.Select(t => MapToDto(t, currentUserId)).ToList(),
             TotalCount = totalCount,
             Page = page,
             PageSize = pageSize
         };
     }
 
-    public async Task<AnswerTemplateDto> GetByIdAsync(Guid id)
+    public async Task<AnswerTemplateDto> GetByIdAsync(Guid id, Guid currentUserId)
     {
         var template = await _repository.GetByIdAsync(id);
-        if (template is null)
+        if (template is null || !IsVisibleTo(template, currentUserId))
             throw new KeyNotFoundException("Cevap şablonu bulunamadı.");
 
-        return MapToDto(template);
+        return MapToDto(template, currentUserId);
     }
 
-    public async Task<AnswerTemplateDto> CreateAsync(CreateAnswerTemplateRequest request)
+    public async Task<AnswerTemplateDto> CreateAsync(CreateAnswerTemplateRequest request, Guid currentUserId)
     {
         var template = new AnswerTemplate
         {
             Id = Guid.NewGuid(),
             Name = request.Name,
+            OwnerId = currentUserId,
             Options = request.Options.Select(o => new AnswerOption
             {
                 Id = Guid.NewGuid(),
@@ -60,14 +62,17 @@ public class AnswerTemplateService
         await _repository.AddAsync(template);
         await _repository.SaveChangesAsync();
 
-        return MapToDto(template);
+        return MapToDto(template, currentUserId);
     }
 
-    public async Task<AnswerTemplateDto> UpdateAsync(Guid id, UpdateAnswerTemplateRequest request)
+    public async Task<AnswerTemplateDto> UpdateAsync(Guid id, UpdateAnswerTemplateRequest request, Guid currentUserId, bool isAdmin)
     {
         var template = await _repository.GetByIdAsync(id);
-        if (template is null)
+        if (template is null || !(isAdmin || IsVisibleTo(template, currentUserId)))
             throw new KeyNotFoundException("Cevap şablonu bulunamadı.");
+
+        if (!CanModify(template, currentUserId, isAdmin))
+            throw new ForbiddenAccessException("Bu cevap şablonunu düzenleme yetkiniz yok.");
 
         template.Name = request.Name;
 
@@ -110,14 +115,17 @@ public class AnswerTemplateService
 
         await _repository.SaveChangesAsync();
 
-        return MapToDto(template);
+        return MapToDto(template, currentUserId);
     }
 
-    public async Task DeleteAsync(Guid id)
+    public async Task DeleteAsync(Guid id, Guid currentUserId, bool isAdmin)
     {
         var template = await _repository.GetByIdAsync(id);
-        if (template is null)
+        if (template is null || !(isAdmin || IsVisibleTo(template, currentUserId)))
             throw new KeyNotFoundException("Cevap şablonu bulunamadı.");
+
+        if (!CanModify(template, currentUserId, isAdmin))
+            throw new ForbiddenAccessException("Bu cevap şablonunu silme yetkiniz yok.");
 
         var isUsed = await _repository.IsUsedInAnyQuestionAsync(id);
         if (isUsed)
@@ -127,12 +135,47 @@ public class AnswerTemplateService
         await _repository.SaveChangesAsync();
     }
 
-    private static AnswerTemplateDto MapToDto(AnswerTemplate template)
+    public async Task<AnswerTemplateDto> DuplicateAsync(Guid id, Guid currentUserId)
+    {
+        var source = await _repository.GetByIdAsync(id);
+        if (source is null || !IsVisibleTo(source, currentUserId))
+            throw new KeyNotFoundException("Cevap şablonu bulunamadı.");
+
+        var copy = new AnswerTemplate
+        {
+            Id = Guid.NewGuid(),
+            Name = source.Name,
+            OwnerId = currentUserId,
+            Options = source.Options
+                .OrderBy(o => o.Order)
+                .Select(o => new AnswerOption
+                {
+                    Id = Guid.NewGuid(),
+                    Text = o.Text,
+                    Order = o.Order
+                }).ToList()
+        };
+
+        await _repository.AddAsync(copy);
+        await _repository.SaveChangesAsync();
+
+        return MapToDto(copy, currentUserId);
+    }
+
+    private static bool IsVisibleTo(AnswerTemplate template, Guid userId) =>
+        template.OwnerId is null || template.OwnerId == userId;
+
+    private static bool CanModify(AnswerTemplate template, Guid userId, bool isAdmin) =>
+        isAdmin || template.OwnerId == userId;
+
+    private static AnswerTemplateDto MapToDto(AnswerTemplate template, Guid currentUserId)
     {
         return new AnswerTemplateDto
         {
             Id = template.Id,
             Name = template.Name,
+            IsDefault = template.OwnerId is null,
+            IsMine = template.OwnerId == currentUserId,
             Options = template.Options
                 .OrderBy(o => o.Order)
                 .Select(o => new AnswerOptionDto

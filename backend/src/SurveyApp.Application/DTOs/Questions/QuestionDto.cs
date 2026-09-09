@@ -6,4 +6,6 @@ public class QuestionDto
     public string Text { get; set; } = string.Empty;
     public Guid AnswerTemplateId { get; set; }
     public string AnswerTemplateName { get; set; } = string.Empty;
+    public bool IsDefault { get; set; }
+    public bool IsMine { get; set; }
 }

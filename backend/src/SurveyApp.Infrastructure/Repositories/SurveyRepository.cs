@@ -68,4 +68,29 @@ public class SurveyRepository : GenericRepository<Survey>, ISurveyRepository
     {
         _context.SurveyAssignments.Add(item);
     }
+
+    public async Task<List<Survey>> GetAllForUserAsync(Guid userId)
+    {
+        return await _context.Surveys
+            .Include(s => s.SurveyQuestions).ThenInclude(sq => sq.Question)
+            .Include(s => s.Assignments).ThenInclude(a => a.User)
+            .Where(s => s.OwnerId == userId)
+            .ToListAsync();
+    }
+
+    public async Task<(List<Survey> Items, int TotalCount)> GetPagedForUserAsync(Guid userId, int page, int pageSize)
+    {
+        var query = _context.Surveys
+            .Include(s => s.SurveyQuestions).ThenInclude(sq => sq.Question)
+            .Include(s => s.Assignments).ThenInclude(a => a.User)
+            .Where(s => s.OwnerId == userId);
+
+        var totalCount = await query.CountAsync();
+        var items = await query
+            .OrderByDescending(s => s.CreatedAt).ThenBy(s => s.Id)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+        return (items, totalCount);
+    }
 }

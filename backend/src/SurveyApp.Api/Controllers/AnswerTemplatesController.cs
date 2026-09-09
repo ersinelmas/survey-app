@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SurveyApp.Api.Extensions;
 using SurveyApp.Application.DTOs.AnswerTemplates;
 using SurveyApp.Application.Services;
 
@@ -22,11 +23,11 @@ public class AnswerTemplatesController : ControllerBase
     {
         if (page is null && pageSize is null)
         {
-            var templates = await _service.GetAllAsync();
+            var templates = await _service.GetAllAsync(User.GetUserId());
             return Ok(templates);
         }
 
-        var result = await _service.GetPagedAsync(Math.Max(page ?? 1, 1), Math.Clamp(pageSize ?? 20, 1, 100));
+        var result = await _service.GetPagedAsync(Math.Max(page ?? 1, 1), Math.Clamp(pageSize ?? 20, 1, 100), User.GetUserId());
         return Ok(result);
     }
 
@@ -35,7 +36,7 @@ public class AnswerTemplatesController : ControllerBase
     {
         try
         {
-            var template = await _service.GetByIdAsync(id);
+            var template = await _service.GetByIdAsync(id, User.GetUserId());
             return Ok(template);
         }
         catch (KeyNotFoundException ex)
@@ -47,23 +48,28 @@ public class AnswerTemplatesController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create(CreateAnswerTemplateRequest request)
     {
-        var template = await _service.CreateAsync(request);
+        var template = await _service.CreateAsync(request, User.GetUserId());
         return CreatedAtAction(nameof(GetById), new { id = template.Id }, template);
     }
 
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(Guid id, UpdateAnswerTemplateRequest request)
     {
-
-        var template = await _service.UpdateAsync(id, request);
+        var template = await _service.UpdateAsync(id, request, User.GetUserId(), User.IsAdmin());
         return Ok(template);
-
     }
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        await _service.DeleteAsync(id);
+        await _service.DeleteAsync(id, User.GetUserId(), User.IsAdmin());
         return NoContent();
+    }
+
+    [HttpPost("{id}/duplicate")]
+    public async Task<IActionResult> Duplicate(Guid id)
+    {
+        var copy = await _service.DuplicateAsync(id, User.GetUserId());
+        return CreatedAtAction(nameof(GetById), new { id = copy.Id }, copy);
     }
 }

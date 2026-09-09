@@ -1,5 +1,6 @@
 using SurveyApp.Application.DTOs.Common;
 using SurveyApp.Application.DTOs.Surveys;
+using SurveyApp.Application.Exceptions;
 using SurveyApp.Core.Entities;
 using SurveyApp.Core.Interfaces;
 
@@ -24,15 +25,15 @@ public class SurveyService
         _responseRepository = responseRepository;
     }
 
-    public async Task<List<SurveyDto>> GetAllAsync()
+    public async Task<List<SurveyDto>> GetAllAsync(Guid currentUserId)
     {
-        var surveys = await _surveyRepository.GetAllAsync();
+        var surveys = await _surveyRepository.GetAllForUserAsync(currentUserId);
         return surveys.Select(MapToDto).ToList();
     }
 
-    public async Task<PagedResult<SurveyDto>> GetPagedAsync(int page, int pageSize)
+    public async Task<PagedResult<SurveyDto>> GetPagedAsync(int page, int pageSize, Guid currentUserId)
     {
-        var (items, totalCount) = await _surveyRepository.GetPagedAsync(page, pageSize);
+        var (items, totalCount) = await _surveyRepository.GetPagedForUserAsync(currentUserId, page, pageSize);
         return new PagedResult<SurveyDto>
         {
             Items = items.Select(MapToDto).ToList(),
@@ -42,16 +43,16 @@ public class SurveyService
         };
     }
 
-    public async Task<SurveyDto> GetByIdAsync(Guid id)
+    public async Task<SurveyDto> GetByIdAsync(Guid id, Guid currentUserId, bool isAdmin)
     {
         var survey = await _surveyRepository.GetByIdAsync(id);
-        if (survey is null)
+        if (survey is null || !IsVisibleTo(survey, currentUserId, isAdmin))
             throw new KeyNotFoundException("Anket bulunamadı.");
 
         return MapToDto(survey);
     }
 
-    public async Task<SurveyDto> CreateAsync(CreateSurveyRequest request)
+    public async Task<SurveyDto> CreateAsync(CreateSurveyRequest request, Guid currentUserId)
     {
         var survey = new Survey
         {
@@ -60,23 +61,27 @@ public class SurveyService
             Description = request.Description,
             StartDate = request.StartDate,
             EndDate = request.EndDate,
-            IsActive = request.IsActive
+            IsActive = request.IsActive,
+            OwnerId = currentUserId
         };
 
-        await AttachQuestions(survey, request.QuestionIds);
+        await AttachQuestions(survey, request.QuestionIds, currentUserId);
         await AttachAssignments(survey, request.AssignedUserIds, new Dictionary<Guid, DateTime>());
 
         await _surveyRepository.AddAsync(survey);
         await _surveyRepository.SaveChangesAsync();
 
-        return await GetByIdAsync(survey.Id);
+        return await GetByIdAsync(survey.Id, currentUserId, isAdmin: false);
     }
 
-    public async Task<SurveyDto> UpdateAsync(Guid id, UpdateSurveyRequest request)
+    public async Task<SurveyDto> UpdateAsync(Guid id, UpdateSurveyRequest request, Guid currentUserId, bool isAdmin)
     {
         var survey = await _surveyRepository.GetByIdAsync(id);
-        if (survey is null)
+        if (survey is null || !IsVisibleTo(survey, currentUserId, isAdmin))
             throw new KeyNotFoundException("Anket bulunamadı.");
+
+        if (!CanModify(survey, currentUserId, isAdmin))
+            throw new ForbiddenAccessException("Bu anketi düzenleme yetkiniz yok.");
 
         survey.Title = request.Title;
         survey.Description = request.Description;
@@ -85,7 +90,7 @@ public class SurveyService
         survey.IsActive = request.IsActive;
 
         _surveyRepository.RemoveSurveyQuestions(survey.SurveyQuestions.ToList());
-        await AttachQuestions(survey, request.QuestionIds);
+        await AttachQuestions(survey, request.QuestionIds, currentUserId);
 
         var existingUserIds = survey.Assignments.Select(a => a.UserId).ToHashSet();
         var newUserIds = request.AssignedUserIds.ToHashSet();
@@ -102,25 +107,28 @@ public class SurveyService
 
         await _surveyRepository.SaveChangesAsync();
 
-        return await GetByIdAsync(survey.Id);
+        return await GetByIdAsync(survey.Id, currentUserId, isAdmin);
     }
 
-    public async Task DeleteAsync(Guid id)
+    public async Task DeleteAsync(Guid id, Guid currentUserId, bool isAdmin)
     {
         var survey = await _surveyRepository.GetByIdAsync(id);
-        if (survey is null)
+        if (survey is null || !IsVisibleTo(survey, currentUserId, isAdmin))
             throw new KeyNotFoundException("Anket bulunamadı.");
+
+        if (!CanModify(survey, currentUserId, isAdmin))
+            throw new ForbiddenAccessException("Bu anketi silme yetkiniz yok.");
 
         _surveyRepository.Remove(survey);
         await _surveyRepository.SaveChangesAsync();
     }
 
-    private async Task AttachQuestions(Survey survey, List<Guid> questionIds)
+    private async Task AttachQuestions(Survey survey, List<Guid> questionIds, Guid currentUserId)
     {
         for (int i = 0; i < questionIds.Count; i++)
         {
             var question = await _questionRepository.GetByIdAsync(questionIds[i]);
-            if (question is null)
+            if (question is null || !(question.OwnerId is null || question.OwnerId == currentUserId))
                 throw new KeyNotFoundException($"Soru bulunamadı: {questionIds[i]}");
 
             var surveyQuestion = new SurveyQuestion
@@ -156,10 +164,10 @@ public class SurveyService
         }
     }
 
-    public async Task<SurveyReportDto> GetReportAsync(Guid surveyId)
+    public async Task<SurveyReportDto> GetReportAsync(Guid surveyId, Guid currentUserId, bool isAdmin)
     {
         var survey = await _surveyRepository.GetByIdWithResponsesAsync(surveyId);
-        if (survey is null)
+        if (survey is null || !IsVisibleTo(survey, currentUserId, isAdmin))
             throw new KeyNotFoundException("Anket bulunamadı.");
 
         var responses = await _responseRepository.GetBySurveyIdAsync(surveyId);
@@ -223,6 +231,12 @@ public class SurveyService
             QuestionSummaries = questionSummaries
         };
     }
+
+    private static bool IsVisibleTo(Survey survey, Guid userId, bool isAdmin) =>
+        isAdmin || survey.OwnerId == userId;
+
+    private static bool CanModify(Survey survey, Guid userId, bool isAdmin) =>
+        isAdmin || survey.OwnerId == userId;
 
     private static SurveyDto MapToDto(Survey survey)
     {

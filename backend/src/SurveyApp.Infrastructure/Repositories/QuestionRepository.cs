@@ -41,4 +41,27 @@ public class QuestionRepository : GenericRepository<Question>, IQuestionReposito
     {
         return await _context.SurveyQuestions.AnyAsync(sq => sq.QuestionId == questionId);
     }
+
+    public async Task<List<Question>> GetAllForUserAsync(Guid userId)
+    {
+        return await _context.Questions
+            .Include(q => q.AnswerTemplate)
+            .Where(q => q.OwnerId == null || q.OwnerId == userId)
+            .ToListAsync();
+    }
+
+    public async Task<(List<Question> Items, int TotalCount)> GetPagedForUserAsync(Guid userId, int page, int pageSize)
+    {
+        var query = _context.Questions
+            .Include(q => q.AnswerTemplate)
+            .Where(q => q.OwnerId == null || q.OwnerId == userId);
+
+        var totalCount = await query.CountAsync();
+        var items = await query
+            .OrderByDescending(q => q.CreatedAt).ThenBy(q => q.Id)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+        return (items, totalCount);
+    }
 }

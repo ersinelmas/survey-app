@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using SurveyApp.Application.Exceptions;
 
 namespace SurveyApp.Api.Middleware;
 
@@ -36,6 +37,7 @@ public class ExceptionHandlingMiddleware
             InvalidOperationException => HttpStatusCode.Conflict,
             ArgumentException => HttpStatusCode.BadRequest,
             UnauthorizedAccessException => HttpStatusCode.Unauthorized,
+            ForbiddenAccessException => HttpStatusCode.Forbidden,
             DbUpdateException => HttpStatusCode.Conflict,
             _ => HttpStatusCode.InternalServerError
         };

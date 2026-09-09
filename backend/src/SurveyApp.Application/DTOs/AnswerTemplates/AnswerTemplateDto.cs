@@ -4,6 +4,8 @@ public class AnswerTemplateDto
 {
     public Guid Id { get; set; }
     public string Name { get; set; } = string.Empty;
+    public bool IsDefault { get; set; }
+    public bool IsMine { get; set; }
     public List<AnswerOptionDto> Options { get; set; } = new();
 }
 

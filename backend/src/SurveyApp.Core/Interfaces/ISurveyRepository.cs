@@ -9,4 +9,6 @@ public interface ISurveyRepository : IGenericRepository<Survey>
     void AddSurveyQuestion(SurveyQuestion item);
     void RemoveAssignments(IEnumerable<SurveyAssignment> items);
     void AddAssignment(SurveyAssignment item);
+    Task<List<Survey>> GetAllForUserAsync(Guid userId);
+    Task<(List<Survey> Items, int TotalCount)> GetPagedForUserAsync(Guid userId, int page, int pageSize);
 }
