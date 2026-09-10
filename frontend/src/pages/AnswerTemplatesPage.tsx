@@ -7,6 +7,7 @@ import {
 import { Add, Edit, Delete, ContentCopy, Public, PublicOff } from '@mui/icons-material';
 import Layout from '../components/Layout';
 import EmptyState from '../components/EmptyState';
+import ResponsiveListCard from '../components/ResponsiveListCard';
 import {
     getAnswerTemplatesPaged, createAnswerTemplate, updateAnswerTemplate, deleteAnswerTemplate, duplicateAnswerTemplate,
     setAnswerTemplateIsDefault,
@@ -113,32 +114,35 @@ function AnswerTemplatesPage() {
             {totalCount === 0 ? (
                 <EmptyState message="Henüz bir cevap şablonu tanımlanmamış." />
             ) : (
-                <TableContainer component={Paper}>
-                    <Table sx={{ minWidth: 480 }}>
-                        <TableHead>
-                            <TableRow>
-                                <TableCell>AD</TableCell>
-                                <TableCell>ŞIKLAR</TableCell>
-                                <TableCell align="right">İŞLEMLER</TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {templates.map((template) => (
-                                <TableRow key={template.id}>
-                                    <TableCell>
+                <>
+                    <Box sx={{ display: { xs: 'block', sm: 'none' } }}>
+                        {templates.map((template) => (
+                            <ResponsiveListCard
+                                key={template.id}
+                                title={
+                                    <>
                                         {template.name}
                                         {template.isDefault && (
                                             <Chip label="Varsayılan" size="small" sx={{ ml: 1 }} />
                                         )}
-                                    </TableCell>
-                                    <TableCell>
-                                        {template.options
-                                            .sort((a, b) => a.order - b.order)
-                                            .map((o) => (
-                                                <Chip key={o.id} label={o.text} size="small" variant="outlined" sx={{ mr: 0.5 }} />
-                                            ))}
-                                    </TableCell>
-                                    <TableCell align="right">
+                                    </>
+                                }
+                                fields={[
+                                    {
+                                        label: 'ŞIKLAR',
+                                        value: (
+                                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, justifyContent: 'flex-end' }}>
+                                                {template.options
+                                                    .sort((a, b) => a.order - b.order)
+                                                    .map((o) => (
+                                                        <Chip key={o.id} label={o.text} size="small" variant="outlined" />
+                                                    ))}
+                                            </Box>
+                                        ),
+                                    },
+                                ]}
+                                actions={
+                                    <>
                                         {isAdmin && (template.isMine || template.isDefault) && (
                                             <IconButton
                                                 onClick={() => handleSetIsDefault(template.id, !template.isDefault)}
@@ -161,23 +165,79 @@ function AnswerTemplatesPage() {
                                                 <ContentCopy fontSize="small" />
                                             </IconButton>
                                         )}
-                                    </TableCell>
+                                    </>
+                                }
+                            />
+                        ))}
+                    </Box>
+                    <TableContainer component={Paper} sx={{ display: { xs: 'none', sm: 'block' } }}>
+                        <Table sx={{ minWidth: 480 }}>
+                            <TableHead>
+                                <TableRow>
+                                    <TableCell>AD</TableCell>
+                                    <TableCell>ŞIKLAR</TableCell>
+                                    <TableCell align="right">İŞLEMLER</TableCell>
                                 </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                    <TablePagination
-                        component="div"
-                        count={totalCount}
-                        page={page - 1}
-                        onPageChange={(_, newPage) => setPage(newPage + 1)}
-                        rowsPerPage={pageSize}
-                        onRowsPerPageChange={(e) => setPageSize(parseInt(e.target.value, 10))}
-                        rowsPerPageOptions={[10, 20, 50]}
-                        labelRowsPerPage="Sayfa başına"
-                        labelDisplayedRows={({ from, to, count }) => `${from}-${to} / ${count}`}
-                    />
-                </TableContainer>
+                            </TableHead>
+                            <TableBody>
+                                {templates.map((template) => (
+                                    <TableRow key={template.id}>
+                                        <TableCell>
+                                            {template.name}
+                                            {template.isDefault && (
+                                                <Chip label="Varsayılan" size="small" sx={{ ml: 1 }} />
+                                            )}
+                                        </TableCell>
+                                        <TableCell>
+                                            {template.options
+                                                .sort((a, b) => a.order - b.order)
+                                                .map((o) => (
+                                                    <Chip key={o.id} label={o.text} size="small" variant="outlined" sx={{ mr: 0.5 }} />
+                                                ))}
+                                        </TableCell>
+                                        <TableCell align="right">
+                                            {isAdmin && (template.isMine || template.isDefault) && (
+                                                <IconButton
+                                                    onClick={() => handleSetIsDefault(template.id, !template.isDefault)}
+                                                    title={template.isDefault ? 'Varsayılanlıktan çıkar' : 'Varsayılan yap'}
+                                                >
+                                                    {template.isDefault ? <PublicOff fontSize="small" /> : <Public fontSize="small" />}
+                                                </IconButton>
+                                            )}
+                                            {canModify(template) ? (
+                                                <>
+                                                    <IconButton onClick={() => openEditDialog(template)}>
+                                                        <Edit fontSize="small" />
+                                                    </IconButton>
+                                                    <IconButton onClick={() => handleDelete(template.id)}>
+                                                        <Delete fontSize="small" />
+                                                    </IconButton>
+                                                </>
+                                            ) : (
+                                                <IconButton onClick={() => handleDuplicate(template.id)} title="Kendime kopyala">
+                                                    <ContentCopy fontSize="small" />
+                                                </IconButton>
+                                            )}
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                    <Paper sx={{ mt: { xs: 1.5, sm: 0 } }}>
+                        <TablePagination
+                            component="div"
+                            count={totalCount}
+                            page={page - 1}
+                            onPageChange={(_, newPage) => setPage(newPage + 1)}
+                            rowsPerPage={pageSize}
+                            onRowsPerPageChange={(e) => setPageSize(parseInt(e.target.value, 10))}
+                            rowsPerPageOptions={[10, 20, 50]}
+                            labelRowsPerPage="Sayfa başına"
+                            labelDisplayedRows={({ from, to, count }) => `${from}-${to} / ${count}`}
+                        />
+                    </Paper>
+                </>
             )}
 
             <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} fullWidth maxWidth="sm">

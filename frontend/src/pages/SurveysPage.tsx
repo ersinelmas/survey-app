@@ -8,6 +8,7 @@ import { Add, Edit, Delete, Assessment, Link as LinkIcon } from '@mui/icons-mate
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import EmptyState from '../components/EmptyState';
+import ResponsiveListCard from '../components/ResponsiveListCard';
 import { getSurveysPaged, createSurvey, updateSurvey, deleteSurvey } from '../api/surveyApi';
 import { getQuestions } from '../api/questionApi';
 import { searchUsers } from '../api/userApi';
@@ -166,45 +167,48 @@ function SurveysPage() {
             {totalCount === 0 ? (
                 <EmptyState message="Henüz bir anket oluşturulmamış." />
             ) : (
-                <TableContainer component={Paper}>
-                    <Table sx={{ minWidth: 650 }}>
-                        <TableHead>
-                            <TableRow>
-                                <TableCell>BAŞLIK</TableCell>
-                                <TableCell>TARİH ARALIĞI</TableCell>
-                                <TableCell>DURUM</TableCell>
-                                <TableCell>SORU / KULLANICI</TableCell>
-                                <TableCell align="right">İŞLEMLER</TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {surveys.map((survey) => (
-                                <TableRow key={survey.id}>
-                                    <TableCell>{survey.title}</TableCell>
-                                    <TableCell sx={{ fontFamily: fontFamilyMono, fontSize: '0.8125rem' }}>
-                                        {formatDate(survey.startDate)} - {formatDate(survey.endDate)}
-                                    </TableCell>
-                                    <TableCell>
-                                        <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                                            <Chip
-                                                label={survey.isActive ? 'Aktif' : 'Pasif'}
-                                                color={survey.isActive ? 'success' : 'default'}
-                                                size="small"
-                                            />
-                                            {getDateStatusLabel(survey) && (
+                <>
+                    <Box sx={{ display: { xs: 'block', sm: 'none' } }}>
+                        {surveys.map((survey) => (
+                            <ResponsiveListCard
+                                key={survey.id}
+                                title={survey.title}
+                                fields={[
+                                    {
+                                        label: 'TARİH ARALIĞI',
+                                        value: (
+                                            <Typography sx={{ fontFamily: fontFamilyMono, fontSize: '0.8125rem' }}>
+                                                {formatDate(survey.startDate)} - {formatDate(survey.endDate)}
+                                            </Typography>
+                                        ),
+                                    },
+                                    {
+                                        label: 'DURUM',
+                                        value: (
+                                            <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                                                 <Chip
-                                                    label={getDateStatusLabel(survey)}
-                                                    color="warning"
-                                                    variant="outlined"
+                                                    label={survey.isActive ? 'Aktif' : 'Pasif'}
+                                                    color={survey.isActive ? 'success' : 'default'}
                                                     size="small"
                                                 />
-                                            )}
-                                        </Box>
-                                    </TableCell>
-                                    <TableCell>
-                                        {survey.questions.length} soru / {survey.assignedUsers.length} kullanıcı
-                                    </TableCell>
-                                    <TableCell align="right">
+                                                {getDateStatusLabel(survey) && (
+                                                    <Chip
+                                                        label={getDateStatusLabel(survey)}
+                                                        color="warning"
+                                                        variant="outlined"
+                                                        size="small"
+                                                    />
+                                                )}
+                                            </Box>
+                                        ),
+                                    },
+                                    {
+                                        label: 'SORU / KULLANICI',
+                                        value: `${survey.questions.length} soru / ${survey.assignedUsers.length} kullanıcı`,
+                                    },
+                                ]}
+                                actions={
+                                    <>
                                         {survey.isPublic && (
                                             <IconButton onClick={() => copyPublicLink(survey.id)} title="Herkese açık linki kopyala">
                                                 <LinkIcon fontSize="small" />
@@ -219,23 +223,84 @@ function SurveysPage() {
                                         <IconButton onClick={() => handleDelete(survey.id)}>
                                             <Delete fontSize="small" />
                                         </IconButton>
-                                    </TableCell>
+                                    </>
+                                }
+                            />
+                        ))}
+                    </Box>
+                    <TableContainer component={Paper} sx={{ display: { xs: 'none', sm: 'block' } }}>
+                        <Table sx={{ minWidth: 650 }}>
+                            <TableHead>
+                                <TableRow>
+                                    <TableCell>BAŞLIK</TableCell>
+                                    <TableCell>TARİH ARALIĞI</TableCell>
+                                    <TableCell>DURUM</TableCell>
+                                    <TableCell>SORU / KULLANICI</TableCell>
+                                    <TableCell align="right">İŞLEMLER</TableCell>
                                 </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                    <TablePagination
-                        component="div"
-                        count={totalCount}
-                        page={page - 1}
-                        onPageChange={(_, newPage) => setPage(newPage + 1)}
-                        rowsPerPage={pageSize}
-                        onRowsPerPageChange={(e) => setPageSize(parseInt(e.target.value, 10))}
-                        rowsPerPageOptions={[10, 20, 50]}
-                        labelRowsPerPage="Sayfa başına"
-                        labelDisplayedRows={({ from, to, count }) => `${from}-${to} / ${count}`}
-                    />
-                </TableContainer>
+                            </TableHead>
+                            <TableBody>
+                                {surveys.map((survey) => (
+                                    <TableRow key={survey.id}>
+                                        <TableCell>{survey.title}</TableCell>
+                                        <TableCell sx={{ fontFamily: fontFamilyMono, fontSize: '0.8125rem' }}>
+                                            {formatDate(survey.startDate)} - {formatDate(survey.endDate)}
+                                        </TableCell>
+                                        <TableCell>
+                                            <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                                                <Chip
+                                                    label={survey.isActive ? 'Aktif' : 'Pasif'}
+                                                    color={survey.isActive ? 'success' : 'default'}
+                                                    size="small"
+                                                />
+                                                {getDateStatusLabel(survey) && (
+                                                    <Chip
+                                                        label={getDateStatusLabel(survey)}
+                                                        color="warning"
+                                                        variant="outlined"
+                                                        size="small"
+                                                    />
+                                                )}
+                                            </Box>
+                                        </TableCell>
+                                        <TableCell>
+                                            {survey.questions.length} soru / {survey.assignedUsers.length} kullanıcı
+                                        </TableCell>
+                                        <TableCell align="right">
+                                            {survey.isPublic && (
+                                                <IconButton onClick={() => copyPublicLink(survey.id)} title="Herkese açık linki kopyala">
+                                                    <LinkIcon fontSize="small" />
+                                                </IconButton>
+                                            )}
+                                            <IconButton onClick={() => navigate(`/surveys/${survey.id}/report`)}>
+                                                <Assessment fontSize="small" />
+                                            </IconButton>
+                                            <IconButton onClick={() => openEditDialog(survey)}>
+                                                <Edit fontSize="small" />
+                                            </IconButton>
+                                            <IconButton onClick={() => handleDelete(survey.id)}>
+                                                <Delete fontSize="small" />
+                                            </IconButton>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                    <Paper sx={{ mt: { xs: 1.5, sm: 0 } }}>
+                        <TablePagination
+                            component="div"
+                            count={totalCount}
+                            page={page - 1}
+                            onPageChange={(_, newPage) => setPage(newPage + 1)}
+                            rowsPerPage={pageSize}
+                            onRowsPerPageChange={(e) => setPageSize(parseInt(e.target.value, 10))}
+                            rowsPerPageOptions={[10, 20, 50]}
+                            labelRowsPerPage="Sayfa başına"
+                            labelDisplayedRows={({ from, to, count }) => `${from}-${to} / ${count}`}
+                        />
+                    </Paper>
+                </>
             )}
 
             <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} fullWidth maxWidth="sm">

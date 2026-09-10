@@ -7,6 +7,7 @@ import {
 import { Add, Edit, Delete, ContentCopy, Public, PublicOff } from '@mui/icons-material';
 import Layout from '../components/Layout';
 import EmptyState from '../components/EmptyState';
+import ResponsiveListCard from '../components/ResponsiveListCard';
 import {
     getQuestionsPaged, createQuestion, updateQuestion, deleteQuestion, duplicateQuestion, setQuestionIsDefault,
 } from '../api/questionApi';
@@ -101,26 +102,22 @@ function QuestionsPage() {
             {totalCount === 0 ? (
                 <EmptyState message="Henüz bir soru oluşturulmamış." />
             ) : (
-                <TableContainer component={Paper}>
-                    <Table sx={{ minWidth: 480 }}>
-                        <TableHead>
-                            <TableRow>
-                                <TableCell>SORU METNİ</TableCell>
-                                <TableCell>CEVAP ŞABLONU</TableCell>
-                                <TableCell align="right">İŞLEMLER</TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {questions.map((question) => (
-                                <TableRow key={question.id}>
-                                    <TableCell>
+                <>
+                    <Box sx={{ display: { xs: 'block', sm: 'none' } }}>
+                        {questions.map((question) => (
+                            <ResponsiveListCard
+                                key={question.id}
+                                title={
+                                    <>
                                         {question.text}
                                         {question.isDefault && (
                                             <Chip label="Varsayılan" size="small" sx={{ ml: 1 }} />
                                         )}
-                                    </TableCell>
-                                    <TableCell>{question.answerTemplateName}</TableCell>
-                                    <TableCell align="right">
+                                    </>
+                                }
+                                fields={[{ label: 'CEVAP ŞABLONU', value: question.answerTemplateName }]}
+                                actions={
+                                    <>
                                         {isAdmin && (question.isMine || question.isDefault) && (
                                             <IconButton
                                                 onClick={() => handleSetIsDefault(question.id, !question.isDefault)}
@@ -143,23 +140,73 @@ function QuestionsPage() {
                                                 <ContentCopy fontSize="small" />
                                             </IconButton>
                                         )}
-                                    </TableCell>
+                                    </>
+                                }
+                            />
+                        ))}
+                    </Box>
+                    <TableContainer component={Paper} sx={{ display: { xs: 'none', sm: 'block' } }}>
+                        <Table sx={{ minWidth: 480 }}>
+                            <TableHead>
+                                <TableRow>
+                                    <TableCell>SORU METNİ</TableCell>
+                                    <TableCell>CEVAP ŞABLONU</TableCell>
+                                    <TableCell align="right">İŞLEMLER</TableCell>
                                 </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                    <TablePagination
-                        component="div"
-                        count={totalCount}
-                        page={page - 1}
-                        onPageChange={(_, newPage) => setPage(newPage + 1)}
-                        rowsPerPage={pageSize}
-                        onRowsPerPageChange={(e) => setPageSize(parseInt(e.target.value, 10))}
-                        rowsPerPageOptions={[10, 20, 50]}
-                        labelRowsPerPage="Sayfa başına"
-                        labelDisplayedRows={({ from, to, count }) => `${from}-${to} / ${count}`}
-                    />
-                </TableContainer>
+                            </TableHead>
+                            <TableBody>
+                                {questions.map((question) => (
+                                    <TableRow key={question.id}>
+                                        <TableCell>
+                                            {question.text}
+                                            {question.isDefault && (
+                                                <Chip label="Varsayılan" size="small" sx={{ ml: 1 }} />
+                                            )}
+                                        </TableCell>
+                                        <TableCell>{question.answerTemplateName}</TableCell>
+                                        <TableCell align="right">
+                                            {isAdmin && (question.isMine || question.isDefault) && (
+                                                <IconButton
+                                                    onClick={() => handleSetIsDefault(question.id, !question.isDefault)}
+                                                    title={question.isDefault ? 'Varsayılanlıktan çıkar' : 'Varsayılan yap'}
+                                                >
+                                                    {question.isDefault ? <PublicOff fontSize="small" /> : <Public fontSize="small" />}
+                                                </IconButton>
+                                            )}
+                                            {canModify(question) ? (
+                                                <>
+                                                    <IconButton onClick={() => openEditDialog(question)}>
+                                                        <Edit fontSize="small" />
+                                                    </IconButton>
+                                                    <IconButton onClick={() => handleDelete(question.id)}>
+                                                        <Delete fontSize="small" />
+                                                    </IconButton>
+                                                </>
+                                            ) : (
+                                                <IconButton onClick={() => handleDuplicate(question.id)} title="Kendime kopyala">
+                                                    <ContentCopy fontSize="small" />
+                                                </IconButton>
+                                            )}
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                    <Paper sx={{ mt: { xs: 1.5, sm: 0 } }}>
+                        <TablePagination
+                            component="div"
+                            count={totalCount}
+                            page={page - 1}
+                            onPageChange={(_, newPage) => setPage(newPage + 1)}
+                            rowsPerPage={pageSize}
+                            onRowsPerPageChange={(e) => setPageSize(parseInt(e.target.value, 10))}
+                            rowsPerPageOptions={[10, 20, 50]}
+                            labelRowsPerPage="Sayfa başına"
+                            labelDisplayedRows={({ from, to, count }) => `${from}-${to} / ${count}`}
+                        />
+                    </Paper>
+                </>
             )}
 
             <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} fullWidth maxWidth="sm">

@@ -49,7 +49,7 @@ function Dashboard() {
 
             <Grid container spacing={2}>
                 {sections.map((section) => (
-                    <Grid size={{ xs: 12, sm: 6, md: 4 }} key={section.path} sx={{ display: 'flex' }}>
+                    <Grid size={{ xs: 12, sm: 6, md: 3 }} key={section.path} sx={{ display: 'flex' }}>
                         <Card
                             sx={{
                                 display: 'flex',

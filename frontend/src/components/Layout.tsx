@@ -1,6 +1,10 @@
-import { AppBar, Toolbar, Typography, Button, Box, Avatar, Tabs, Tab } from '@mui/material';
+import {
+    AppBar, Toolbar, Typography, Box, Avatar, Tabs, Tab, IconButton, Menu, MenuItem, ListItemIcon, Divider,
+    Drawer, List, ListItemButton, ListItemText,
+} from '@mui/material';
+import { KeyboardArrowDown, Person, Logout, Menu as MenuIcon } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useAuth } from '../context/AuthContext';
 
 const tabs = [
@@ -15,10 +19,18 @@ function Layout({ children }: { children: ReactNode }) {
     const { email, logout } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
+    const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
+    const [drawerOpen, setDrawerOpen] = useState(false);
 
     const handleLogout = () => {
+        setMenuAnchor(null);
         logout();
         navigate('/login');
+    };
+
+    const handleProfile = () => {
+        setMenuAnchor(null);
+        navigate('/profile');
     };
 
     const avatarLetter = email ? email.charAt(0).toUpperCase() : '?';
@@ -29,10 +41,18 @@ function Layout({ children }: { children: ReactNode }) {
         <Box>
             <AppBar position="static">
                 <Toolbar sx={{ display: 'flex', justifyContent: 'space-between', gap: 1, px: { xs: 1.5, sm: 2 } }}>
-                    <Box
-                        onClick={() => navigate('/dashboard')}
-                        sx={{ display: 'flex', alignItems: 'center', gap: 1, cursor: 'pointer', minWidth: 0 }}
-                    >
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, minWidth: 0 }}>
+                        <IconButton
+                            color="inherit"
+                            onClick={() => setDrawerOpen(true)}
+                            sx={{ display: { xs: 'inline-flex', sm: 'none' } }}
+                        >
+                            <MenuIcon />
+                        </IconButton>
+                        <Box
+                            onClick={() => navigate('/dashboard')}
+                            sx={{ display: 'flex', alignItems: 'center', gap: 1, cursor: 'pointer', minWidth: 0 }}
+                        >
                         <Box
                             component="img"
                             src="/favicon.svg"
@@ -42,11 +62,13 @@ function Layout({ children }: { children: ReactNode }) {
                         <Typography variant="h6" noWrap sx={{ fontSize: { xs: '1.05rem', sm: '1.25rem' } }}>
                             Survey App
                         </Typography>
+                        </Box>
                     </Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 2 } }}>
-                        <Box
-                            onClick={() => navigate('/profile')}
-                            sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0, cursor: 'pointer' }}
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <IconButton
+                            color="inherit"
+                            onClick={(e) => setMenuAnchor(e.currentTarget)}
+                            sx={{ display: 'flex', alignItems: 'center', gap: 0.5, minWidth: 0, borderRadius: 2, px: 1 }}
                         >
                             <Avatar
                                 sx={{
@@ -63,14 +85,27 @@ function Layout({ children }: { children: ReactNode }) {
                             <Typography
                                 variant="body2"
                                 noWrap
-                                sx={{ display: { xs: 'none', sm: 'block' }, maxWidth: 200 }}
+                                sx={{ display: { xs: 'none', sm: 'block' }, maxWidth: 200, color: 'inherit', textTransform: 'none' }}
                             >
                                 {email}
                             </Typography>
-                        </Box>
-                        <Button color="inherit" onClick={handleLogout} sx={{ px: { xs: 1, sm: 2 }, minWidth: 0 }}>
-                            Çıkış Yap
-                        </Button>
+                            <KeyboardArrowDown sx={{ color: 'inherit', fontSize: 20 }} />
+                        </IconButton>
+                        <Menu anchorEl={menuAnchor} open={!!menuAnchor} onClose={() => setMenuAnchor(null)}>
+                            <MenuItem onClick={handleProfile}>
+                                <ListItemIcon>
+                                    <Person fontSize="small" />
+                                </ListItemIcon>
+                                Profilim
+                            </MenuItem>
+                            <Divider />
+                            <MenuItem onClick={handleLogout}>
+                                <ListItemIcon>
+                                    <Logout fontSize="small" />
+                                </ListItemIcon>
+                                Çıkış Yap
+                            </MenuItem>
+                        </Menu>
                     </Box>
                 </Toolbar>
                 <Tabs
@@ -80,6 +115,7 @@ function Layout({ children }: { children: ReactNode }) {
                     variant="scrollable"
                     scrollButtons={false}
                     sx={{
+                        display: { xs: 'none', sm: 'flex' },
                         minHeight: 40,
                         borderTop: '1px solid rgba(255,255,255,0.12)',
                         '& .MuiTab-root': {
@@ -95,6 +131,24 @@ function Layout({ children }: { children: ReactNode }) {
                     ))}
                 </Tabs>
             </AppBar>
+            <Drawer anchor="left" open={drawerOpen} onClose={() => setDrawerOpen(false)}>
+                <Box sx={{ width: 260 }} role="presentation">
+                    <List>
+                        {tabs.map((t) => (
+                            <ListItemButton
+                                key={t.path}
+                                selected={activeTab === t.path}
+                                onClick={() => {
+                                    setDrawerOpen(false);
+                                    navigate(t.path);
+                                }}
+                            >
+                                <ListItemText primary={t.label} />
+                            </ListItemButton>
+                        ))}
+                    </List>
+                </Box>
+            </Drawer>
             <Box sx={{ padding: { xs: 2, sm: 3 } }}>{children}</Box>
         </Box>
     );
