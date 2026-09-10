@@ -14,3 +14,12 @@ export interface AuthResponse {
     email: string;
     isAdmin: boolean;
 }
+
+export interface ChangePasswordRequest {
+    currentPassword: string;
+    newPassword: string;
+}
+
+export interface DeleteAccountRequest {
+    password: string;
+}

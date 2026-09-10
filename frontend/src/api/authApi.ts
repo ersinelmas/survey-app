@@ -1,5 +1,5 @@
 import axiosInstance from './axiosInstance';
-import type { LoginRequest, RegisterRequest, AuthResponse } from '../types/auth';
+import type { LoginRequest, RegisterRequest, AuthResponse, ChangePasswordRequest, DeleteAccountRequest } from '../types/auth';
 
 export const login = async (data: LoginRequest): Promise<AuthResponse> => {
     const response = await axiosInstance.post<AuthResponse>('/Auth/login', data);
@@ -13,4 +13,12 @@ export const register = async (data: RegisterRequest): Promise<AuthResponse> => 
 
 export const logout = async (refreshToken: string): Promise<void> => {
     await axiosInstance.post('/Auth/logout', { refreshToken });
+};
+
+export const changePassword = async (data: ChangePasswordRequest): Promise<void> => {
+    await axiosInstance.put('/Auth/password', data);
+};
+
+export const deleteAccount = async (data: DeleteAccountRequest): Promise<void> => {
+    await axiosInstance.delete('/Auth/me', { data });
 };

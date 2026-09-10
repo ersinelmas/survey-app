@@ -44,7 +44,10 @@ function Layout({ children }: { children: ReactNode }) {
                         </Typography>
                     </Box>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 2 } }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}>
+                        <Box
+                            onClick={() => navigate('/profile')}
+                            sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0, cursor: 'pointer' }}
+                        >
                             <Avatar
                                 sx={{
                                     width: 32,

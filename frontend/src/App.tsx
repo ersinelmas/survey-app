@@ -13,6 +13,7 @@ import FillSurveyPage from './pages/FillSurveyPage';
 import PublicFillSurveyPage from './pages/PublicFillSurveyPage';
 import SurveyReportPage from './pages/SurveyReportPage';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
+import ProfilePage from './pages/ProfilePage';
 
 function App() {
   return (
@@ -85,6 +86,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <FillSurveyPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <ProfilePage />
                 </ProtectedRoute>
               }
             />
