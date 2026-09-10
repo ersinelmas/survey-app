@@ -37,4 +37,9 @@ public class UserRepository : GenericRepository<User>, IUserRepository
             .Take(limit)
             .ToListAsync();
     }
+
+    public async Task<int> CountAdminsAsync()
+    {
+        return await _context.Users.CountAsync(u => u.IsAdmin);
+    }
 }

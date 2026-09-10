@@ -10,10 +10,12 @@ namespace SurveyApp.Api.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly AuthService _authService;
+    private readonly AccountService _accountService;
 
-    public AuthController(AuthService authService)
+    public AuthController(AuthService authService, AccountService accountService)
     {
         _authService = authService;
+        _accountService = accountService;
     }
 
     [HttpPost("register")]
@@ -61,5 +63,13 @@ public class AuthController : ControllerBase
         var email = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
         var isAdmin = User.FindFirst("IsAdmin")?.Value == "true";
         return Ok(new { email, isAdmin });
+    }
+
+    [HttpDelete("me")]
+    [Microsoft.AspNetCore.Authorization.Authorize]
+    public async Task<IActionResult> DeleteMe(DeleteAccountRequest request)
+    {
+        await _accountService.DeleteOwnAccountAsync(User.GetUserId(), request.Password);
+        return NoContent();
     }
 }

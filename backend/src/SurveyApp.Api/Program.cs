@@ -87,6 +87,7 @@ builder.Services.AddScoped<SurveyService>();
 builder.Services.AddScoped<ISurveyAssignmentRepository, SurveyAssignmentRepository>();
 builder.Services.AddScoped<ISurveyResponseRepository, SurveyResponseRepository>();
 builder.Services.AddScoped<SurveyFillingService>();
+builder.Services.AddScoped<AccountService>();
 
 // JWT Authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
