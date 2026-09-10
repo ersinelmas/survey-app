@@ -86,6 +86,20 @@ public class AnswerTemplateService
                 throw new InvalidOperationException($"'{option.Text}' şıkkı en az bir ankette cevaplanmış, silinemez. Metnini güncelleyebilir veya yeni bir şık ekleyebilirsiniz.");
         }
 
+        foreach (var optionRequest in request.Options)
+        {
+            if (!optionRequest.Id.HasValue)
+                continue;
+
+            var existing = template.Options.FirstOrDefault(o => o.Id == optionRequest.Id.Value);
+            if (existing is not null && existing.Text != optionRequest.Text)
+            {
+                var isUsed = await _responseRepository.IsOptionUsedInAnyResponseAsync(existing.Id);
+                if (isUsed)
+                    throw new InvalidOperationException($"'{existing.Text}' şıkkı en az bir ankette cevaplanmış, metni değiştirilemez. Bunun yerine yeni bir şık ekleyebilirsiniz.");
+            }
+        }
+
         foreach (var option in toRemove)
             template.Options.Remove(option);
 
