@@ -101,6 +101,19 @@ public class AuthService
         return await IssueTokensAsync(user);
     }
 
+    public async Task ChangePasswordAsync(Guid userId, ChangePasswordRequest request)
+    {
+        var user = await _userRepository.GetByIdAsync(userId)
+            ?? throw new KeyNotFoundException("Kullanıcı bulunamadı.");
+
+        if (!_passwordHasher.Verify(request.CurrentPassword, user.PasswordHash))
+            throw new UnauthorizedAccessException("Mevcut şifre hatalı.");
+
+        user.PasswordHash = _passwordHasher.Hash(request.NewPassword);
+        await _refreshTokenRepository.RevokeAllForUserAsync(userId);
+        await _userRepository.SaveChangesAsync();
+    }
+
     public async Task LogoutAsync(string refreshToken)
     {
         var existingToken = await _refreshTokenRepository.GetByTokenAsync(refreshToken);

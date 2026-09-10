@@ -15,4 +15,14 @@ public class RefreshTokenRepository : GenericRepository<RefreshToken>, IRefreshT
     {
         return await _context.RefreshTokens.FirstOrDefaultAsync(rt => rt.Token == token);
     }
+
+    public async Task RevokeAllForUserAsync(Guid userId)
+    {
+        var activeTokens = await _context.RefreshTokens
+            .Where(rt => rt.UserId == userId && rt.RevokedAt == null)
+            .ToListAsync();
+
+        foreach (var token in activeTokens)
+            token.RevokedAt = DateTime.UtcNow;
+    }
 }

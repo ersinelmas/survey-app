@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using SurveyApp.Api.Extensions;
 using SurveyApp.Application.DTOs.Auth;
 using SurveyApp.Application.Services;
 
@@ -42,6 +43,14 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> Logout(RefreshRequest request)
     {
         await _authService.LogoutAsync(request.RefreshToken);
+        return NoContent();
+    }
+
+    [HttpPut("password")]
+    [Microsoft.AspNetCore.Authorization.Authorize]
+    public async Task<IActionResult> ChangePassword(ChangePasswordRequest request)
+    {
+        await _authService.ChangePasswordAsync(User.GetUserId(), request);
         return NoContent();
     }
 
