@@ -103,7 +103,9 @@ function ProfilePage() {
                 <Paper sx={{ p: 3, borderColor: 'error.main', borderWidth: 1, borderStyle: 'solid' }}>
                     <Typography variant="h6" color="error" sx={{ mb: 1 }}>Hesabı Sil</Typography>
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                        Hesabınızı sildiğinizde size ait tüm anketler, sorular ve cevap şablonları kalıcı olarak silinir. Bu işlem geri alınamaz.
+                        Hesabınızı sildiğinizde size ait tüm anketler, sorular ve cevap şablonları kalıcı olarak silinir.
+                        Anketlerinize başka kullanıcıların verdiği cevaplar ve tamamlama kayıtları da bu anketlerle birlikte silinir.
+                        Bu işlem geri alınamaz.
                     </Typography>
                     <Divider sx={{ mb: 2 }} />
                     <Button variant="outlined" color="error" onClick={openDeleteDialog}>

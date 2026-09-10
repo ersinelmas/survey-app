@@ -50,6 +50,7 @@ public class AuthController : ControllerBase
 
     [HttpPut("password")]
     [Microsoft.AspNetCore.Authorization.Authorize]
+    [Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("auth")]
     public async Task<IActionResult> ChangePassword(ChangePasswordRequest request)
     {
         await _authService.ChangePasswordAsync(User.GetUserId(), request);
@@ -67,6 +68,7 @@ public class AuthController : ControllerBase
 
     [HttpDelete("me")]
     [Microsoft.AspNetCore.Authorization.Authorize]
+    [Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("auth")]
     public async Task<IActionResult> DeleteMe(DeleteAccountRequest request)
     {
         await _accountService.DeleteOwnAccountAsync(User.GetUserId(), request.Password);
