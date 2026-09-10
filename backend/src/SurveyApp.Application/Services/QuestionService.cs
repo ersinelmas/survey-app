@@ -79,15 +79,22 @@ public class QuestionService
         if (!CanModify(question, currentUserId, isAdmin))
             throw new ForbiddenAccessException("Bu soruyu düzenleme yetkiniz yok.");
 
-        var template = await _answerTemplateRepository.GetByIdAsync(request.AnswerTemplateId);
-        if (template is null || !(template.OwnerId is null || template.OwnerId == currentUserId))
-            throw new KeyNotFoundException("Belirtilen cevap şablonu bulunamadı.");
-
+        AnswerTemplate template;
         if (question.AnswerTemplateId != request.AnswerTemplateId)
         {
+            var newTemplate = await _answerTemplateRepository.GetByIdAsync(request.AnswerTemplateId);
+            if (newTemplate is null || !(newTemplate.OwnerId is null || newTemplate.OwnerId == currentUserId))
+                throw new KeyNotFoundException("Belirtilen cevap şablonu bulunamadı.");
+
             var isUsed = await _responseRepository.IsQuestionUsedInAnyResponseAsync(id);
             if (isUsed)
                 throw new InvalidOperationException("Bu soru en az bir ankette cevaplanmış, cevap şablonu değiştirilemez.");
+
+            template = newTemplate;
+        }
+        else
+        {
+            template = question.AnswerTemplate!;
         }
 
         question.Text = request.Text;
