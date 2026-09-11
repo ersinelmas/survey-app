@@ -18,6 +18,9 @@ import { useAuth } from '../context/AuthContext';
 import { useSnackbar } from '../context/SnackbarContext';
 import { extractErrorMessage } from '../api/errorHelper';
 
+const MIN_OPTIONS = 2;
+const MAX_OPTIONS = 10;
+
 function AnswerTemplatesPage() {
     const { isAdmin } = useAuth();
     const { showError } = useSnackbar();
@@ -75,12 +78,12 @@ function AnswerTemplatesPage() {
     };
 
     const addOption = () => {
-        if (options.length >= 4) return;
+        if (options.length >= MAX_OPTIONS) return;
         setOptions([...options, { id: null, text: '', order: options.length + 1 }]);
     };
 
     const removeOption = (index: number) => {
-        if (options.length <= 2) return;
+        if (options.length <= MIN_OPTIONS) return;
         setOptions(options.filter((_, i) => i !== index));
     };
 
@@ -259,12 +262,12 @@ function AnswerTemplatesPage() {
                                 value={option.text}
                                 onChange={(e) => updateOptionText(index, e.target.value)}
                             />
-                            <IconButton onClick={() => removeOption(index)} disabled={options.length <= 2}>
+                            <IconButton onClick={() => removeOption(index)} disabled={options.length <= MIN_OPTIONS}>
                                 <Delete fontSize="small" />
                             </IconButton>
                         </Box>
                     ))}
-                    <Button onClick={addOption} disabled={options.length >= 4} sx={{ mt: 1 }}>
+                    <Button onClick={addOption} disabled={options.length >= MAX_OPTIONS} sx={{ mt: 1 }}>
                         + Şık Ekle
                     </Button>
                 </DialogContent>
