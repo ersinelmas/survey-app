@@ -14,7 +14,7 @@ function PrivacyPolicyPage() {
                     Gizlilik Politikası ve Aydınlatma Metni
                 </Typography>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                    Son güncelleme: Eylül 2026
+                    Son güncelleme: 11 Eylül 2026
                 </Typography>
 
                 <Divider sx={{ mb: 3 }} />
@@ -34,7 +34,9 @@ function PrivacyPolicyPage() {
                             Hesap oluşturduğunuzda email adresiniz ve şifrenizin geri döndürülemez şekilde
                             şifrelenmiş (hash'lenmiş) hâli saklanır; şifrenizin okunabilir hâli hiçbir yerde
                             tutulmaz. Ayrıca size atanan anketlere verdiğiniz cevaplar, hesabınızla ilişkilendirilmiş
-                            şekilde saklanır.
+                            şekilde saklanır. Bazı anket soruları serbest metin şeklinde açık uçlu cevap
+                            isteyebilir; bu tür sorulara yazacağınız cevapların içeriği tamamen size bağlıdır — bu
+                            alanlara isim, iletişim bilgisi gibi ek kişisel veriler yazmamanızı öneririz.
                         </Typography>
                     </Box>
 
@@ -74,8 +76,21 @@ function PrivacyPolicyPage() {
                             KVKK'nın 11. maddesi kapsamında; verilerinizin işlenip işlenmediğini öğrenme,
                             işlenmişse buna ilişkin bilgi talep etme, işlenme amacını öğrenme, yurt içinde veya
                             yurt dışında aktarıldığı üçüncü kişileri bilme, eksik/yanlış işlenmişse düzeltilmesini
-                            isteme ve verilerinizin silinmesini/yok edilmesini talep etme haklarına sahipsiniz. Bu
-                            taleplerinizi aşağıdaki iletişim adresi üzerinden iletebilirsiniz.
+                            isteme ve verilerinizin silinmesini/yok edilmesini talep etme haklarına sahipsiniz.
+                        </Typography>
+                        <Typography variant="body2" sx={{ mt: 1.5 }}>
+                            Şifrenizi değiştirme ve hesabınızı silme işlemlerini "Hesabım" sayfası üzerinden,
+                            email ile talepte bulunmanıza gerek kalmadan doğrudan kendiniz gerçekleştirebilirsiniz.
+                            Hesabınızı sildiğinizde; sahibi olduğunuz anketler, sorular ve cevap şablonları
+                            kalıcı olarak silinir (bu anketlere başka kullanıcıların verdiği cevaplar da bu
+                            silme işlemiyle birlikte kaldırılır). Başka bir kullanıcının anketine sizin verdiğiniz
+                            cevaplar ise anketin bütünlüğünü korumak amacıyla silinmez; bunun yerine hesabınızla
+                            olan bağlantısı koparılarak sizinle ilişkilendirilemez hâle getirilir (anonimleştirilir).
+                        </Typography>
+                        <Typography variant="body2" sx={{ mt: 1.5 }}>
+                            Hakkınızda işlenen verilerin bir kopyasını "Hesabım" sayfasındaki "Verilerimi İndir"
+                            butonuyla JSON formatında indirebilirsiniz. Bunun dışındaki taleplerinizi (düzeltme,
+                            itiraz vb.) aşağıdaki iletişim adresi üzerinden bize iletebilirsiniz.
                         </Typography>
                     </Box>
 
