@@ -185,7 +185,7 @@ public class SurveyFillingServiceTests
 
         var request = new SubmitSurveyRequest
         {
-            Answers = new List<SubmitAnswerDto> { new() { QuestionId = Guid.NewGuid(), SelectedOptionId = Guid.NewGuid() } }
+            Answers = new List<SubmitAnswerDto> { new() { QuestionId = Guid.NewGuid(), SelectedOptionIds = new List<Guid> { Guid.NewGuid() } } }
         };
 
         await Assert.ThrowsAsync<ArgumentException>(() => _sut.SubmitAsync(assignment.UserId, survey.Id, request));
@@ -202,7 +202,7 @@ public class SurveyFillingServiceTests
 
         var request = new SubmitSurveyRequest
         {
-            Answers = new List<SubmitAnswerDto> { new() { QuestionId = question.Id, SelectedOptionId = Guid.NewGuid() } }
+            Answers = new List<SubmitAnswerDto> { new() { QuestionId = question.Id, SelectedOptionIds = new List<Guid> { Guid.NewGuid() } } }
         };
 
         await Assert.ThrowsAsync<ArgumentException>(() => _sut.SubmitAsync(assignment.UserId, survey.Id, request));
@@ -222,7 +222,7 @@ public class SurveyFillingServiceTests
 
         var request = new SubmitSurveyRequest
         {
-            Answers = new List<SubmitAnswerDto> { new() { QuestionId = question.Id, SelectedOptionId = selectedOptionId } }
+            Answers = new List<SubmitAnswerDto> { new() { QuestionId = question.Id, SelectedOptionIds = new List<Guid> { selectedOptionId } } }
         };
 
         await _sut.SubmitAsync(assignment.UserId, survey.Id, request);
@@ -333,7 +333,7 @@ public class SurveyFillingServiceTests
 
         var request = new SubmitPublicSurveyRequest
         {
-            Answers = new List<SubmitAnswerDto> { new() { QuestionId = question.Id, SelectedOptionId = selectedOptionId } },
+            Answers = new List<SubmitAnswerDto> { new() { QuestionId = question.Id, SelectedOptionIds = new List<Guid> { selectedOptionId } } },
             RespondentToken = "token-123",
         };
 
@@ -356,7 +356,7 @@ public class SurveyFillingServiceTests
 
         var request = new SubmitPublicSurveyRequest
         {
-            Answers = new List<SubmitAnswerDto> { new() { QuestionId = question.Id, SelectedOptionId = selectedOptionId } },
+            Answers = new List<SubmitAnswerDto> { new() { QuestionId = question.Id, SelectedOptionIds = new List<Guid> { selectedOptionId } } },
             RespondentToken = "token-ignored",
         };
 
@@ -381,7 +381,7 @@ public class SurveyFillingServiceTests
 
         var request = new SubmitPublicSurveyRequest
         {
-            Answers = new List<SubmitAnswerDto> { new() { QuestionId = question.Id, SelectedOptionId = selectedOptionId } },
+            Answers = new List<SubmitAnswerDto> { new() { QuestionId = question.Id, SelectedOptionIds = new List<Guid> { selectedOptionId } } },
         };
 
         await _sut.SubmitPublicAsync(survey.Id, userId, request);
@@ -401,7 +401,7 @@ public class SurveyFillingServiceTests
 
         var request = new SubmitPublicSurveyRequest
         {
-            Answers = new List<SubmitAnswerDto> { new() { QuestionId = question.Id, SelectedOptionId = selectedOptionId } },
+            Answers = new List<SubmitAnswerDto> { new() { QuestionId = question.Id, SelectedOptionIds = new List<Guid> { selectedOptionId } } },
             RespondentToken = "token-anon",
         };
 

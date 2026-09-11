@@ -301,7 +301,7 @@ public class SurveyServiceTests
         Assert.Single(report.PendingUsers);
         Assert.Single(report.QuestionSummaries);
         Assert.Single(report.QuestionSummaries[0].UserAnswers);
-        Assert.Equal("Evet", report.QuestionSummaries[0].UserAnswers[0].SelectedOptionText);
+        Assert.Equal("Evet", report.QuestionSummaries[0].UserAnswers[0].AnswerText);
         Assert.False(report.QuestionSummaries[0].IsRemovedFromSurvey);
     }
 

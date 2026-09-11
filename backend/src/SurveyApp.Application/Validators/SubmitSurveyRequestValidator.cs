@@ -11,10 +11,21 @@ public class SubmitSurveyRequestValidator : AbstractValidator<SubmitSurveyReques
             .NotEmpty().WithMessage("En az bir cevap gönderilmelidir.");
 
         RuleForEach(x => x.Answers)
-            .ChildRules(answer =>
-            {
-                answer.RuleFor(a => a.QuestionId).NotEmpty().WithMessage("Soru ID boş olamaz.");
-                answer.RuleFor(a => a.SelectedOptionId).NotEmpty().WithMessage("Seçilen şık ID boş olamaz.");
-            });
+            .SetValidator(new SubmitAnswerDtoValidator());
+    }
+}
+
+public class SubmitAnswerDtoValidator : AbstractValidator<SubmitAnswerDto>
+{
+    public SubmitAnswerDtoValidator()
+    {
+        RuleFor(a => a.QuestionId).NotEmpty().WithMessage("Soru ID boş olamaz.");
+
+        RuleFor(a => a)
+            .Must(a => a.SelectedOptionIds.Count > 0 || !string.IsNullOrWhiteSpace(a.TextValue))
+            .WithMessage("Bir cevap girilmelidir.");
+
+        RuleFor(a => a.TextValue)
+            .MaximumLength(1000).WithMessage("Cevap metni 1000 karakterden uzun olamaz.");
     }
 }

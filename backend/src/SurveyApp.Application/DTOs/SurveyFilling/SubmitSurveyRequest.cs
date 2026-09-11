@@ -8,5 +8,6 @@ public class SubmitSurveyRequest
 public class SubmitAnswerDto
 {
     public Guid QuestionId { get; set; }
-    public Guid SelectedOptionId { get; set; }
+    public List<Guid> SelectedOptionIds { get; set; } = new();
+    public string? TextValue { get; set; }
 }

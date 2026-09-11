@@ -1,3 +1,5 @@
+using SurveyApp.Core.Enums;
+
 namespace SurveyApp.Application.DTOs.SurveyFilling;
 
 public class SurveyFillDetailDto
@@ -12,6 +14,7 @@ public class SurveyFillQuestionDto
 {
     public Guid QuestionId { get; set; }
     public string Text { get; set; } = string.Empty;
+    public QuestionType Type { get; set; }
     public List<SurveyFillOptionDto> Options { get; set; } = new();
 }
 

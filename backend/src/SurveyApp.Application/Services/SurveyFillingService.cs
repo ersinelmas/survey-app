@@ -1,5 +1,6 @@
 using SurveyApp.Application.DTOs.SurveyFilling;
 using SurveyApp.Core.Entities;
+using SurveyApp.Core.Enums;
 using SurveyApp.Core.Interfaces;
 
 namespace SurveyApp.Application.Services;
@@ -82,13 +83,10 @@ public class SurveyFillingService
 
         ValidateAnswers(assignment.Survey.SurveyQuestions, request.Answers);
 
-        var responses = request.Answers.Select(a => new SurveyResponse
+        var responses = BuildResponses(request.Answers, r =>
         {
-            Id = Guid.NewGuid(),
-            SurveyId = surveyId,
-            UserId = userId,
-            QuestionId = a.QuestionId,
-            SelectedOptionId = a.SelectedOptionId
+            r.SurveyId = surveyId;
+            r.UserId = userId;
         });
 
         await _responseRepository.AddRangeAsync(responses);
@@ -151,14 +149,11 @@ public class SurveyFillingService
 
         ValidateAnswers(survey.SurveyQuestions, request.Answers);
 
-        var responses = request.Answers.Select(a => new SurveyResponse
+        var responses = BuildResponses(request.Answers, r =>
         {
-            Id = Guid.NewGuid(),
-            SurveyId = surveyId,
-            UserId = currentUserId,
-            RespondentToken = currentUserId.HasValue ? null : request.RespondentToken,
-            QuestionId = a.QuestionId,
-            SelectedOptionId = a.SelectedOptionId
+            r.SurveyId = surveyId;
+            r.UserId = currentUserId;
+            r.RespondentToken = currentUserId.HasValue ? null : request.RespondentToken;
         });
 
         await _responseRepository.AddRangeAsync(responses);
@@ -178,18 +173,79 @@ public class SurveyFillingService
 
     private static void ValidateAnswers(IEnumerable<SurveyQuestion> surveyQuestions, List<SubmitAnswerDto> answers)
     {
-        var validOptionIdsByQuestionId = surveyQuestions
-            .ToDictionary(sq => sq.QuestionId, sq => sq.Question.AnswerTemplate.Options.Select(o => o.Id).ToHashSet());
+        var questionsById = surveyQuestions.ToDictionary(sq => sq.QuestionId, sq => sq.Question);
+        var answersByQuestionId = answers.ToDictionary(a => a.QuestionId);
 
-        if (answers.Count != validOptionIdsByQuestionId.Count
-            || !answers.All(a => validOptionIdsByQuestionId.ContainsKey(a.QuestionId)))
+        if (answers.Count != questionsById.Count
+            || !answers.All(a => questionsById.ContainsKey(a.QuestionId)))
         {
             throw new ArgumentException("Anketteki tüm sorular cevaplanmalıdır.");
         }
 
-        if (answers.Any(a => !validOptionIdsByQuestionId[a.QuestionId].Contains(a.SelectedOptionId)))
+        foreach (var (questionId, question) in questionsById)
         {
+            var answer = answersByQuestionId[questionId];
+
+            switch (question.Type)
+            {
+                case QuestionType.SingleChoice:
+                    if (answer.SelectedOptionIds.Count != 1)
+                        throw new ArgumentException("Tekli seçim sorularında tam olarak bir şık seçilmelidir.");
+                    ValidateOptionsBelongToQuestion(question, answer.SelectedOptionIds);
+                    break;
+
+                case QuestionType.MultipleChoice:
+                    if (answer.SelectedOptionIds.Count == 0)
+                        throw new ArgumentException("Çoktan seçmeli sorularda en az bir şık seçilmelidir.");
+                    if (answer.SelectedOptionIds.Distinct().Count() != answer.SelectedOptionIds.Count)
+                        throw new ArgumentException("Aynı şık birden fazla kez seçilemez.");
+                    ValidateOptionsBelongToQuestion(question, answer.SelectedOptionIds);
+                    break;
+
+                case QuestionType.FreeText:
+                    if (string.IsNullOrWhiteSpace(answer.TextValue))
+                        throw new ArgumentException("Serbest metin sorusu boş bırakılamaz.");
+                    break;
+            }
+        }
+    }
+
+    private static void ValidateOptionsBelongToQuestion(Question question, IEnumerable<Guid> selectedOptionIds)
+    {
+        var validOptionIds = question.AnswerTemplate!.Options.Select(o => o.Id).ToHashSet();
+        if (selectedOptionIds.Any(id => !validOptionIds.Contains(id)))
             throw new ArgumentException("Seçilen şık, ilgili soruya ait değil.");
+    }
+
+    private static IEnumerable<SurveyResponse> BuildResponses(List<SubmitAnswerDto> answers, Action<SurveyResponse> configure)
+    {
+        foreach (var answer in answers)
+        {
+            if (answer.SelectedOptionIds.Count > 0)
+            {
+                foreach (var optionId in answer.SelectedOptionIds)
+                {
+                    var response = new SurveyResponse
+                    {
+                        Id = Guid.NewGuid(),
+                        QuestionId = answer.QuestionId,
+                        SelectedOptionId = optionId
+                    };
+                    configure(response);
+                    yield return response;
+                }
+            }
+            else
+            {
+                var response = new SurveyResponse
+                {
+                    Id = Guid.NewGuid(),
+                    QuestionId = answer.QuestionId,
+                    TextValue = answer.TextValue
+                };
+                configure(response);
+                yield return response;
+            }
         }
     }
 
@@ -201,13 +257,14 @@ public class SurveyFillingService
             {
                 QuestionId = sq.Question.Id,
                 Text = sq.Question.Text,
-                Options = sq.Question.AnswerTemplate.Options
+                Type = sq.Question.Type,
+                Options = sq.Question.AnswerTemplate?.Options
                     .OrderBy(o => o.Order)
                     .Select(o => new SurveyFillOptionDto
                     {
                         OptionId = o.Id,
                         Text = o.Text
-                    }).ToList()
+                    }).ToList() ?? new List<SurveyFillOptionDto>()
             }).ToList();
     }
 }

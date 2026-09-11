@@ -29,5 +29,5 @@ public class QuestionResponseSummaryDto
 public class UserAnswerDto
 {
     public string UserEmail { get; set; } = string.Empty;
-    public string SelectedOptionText { get; set; } = string.Empty;
+    public string AnswerText { get; set; } = string.Empty;
 }

@@ -57,11 +57,11 @@ public class SurveyDbContext : DbContext
             .HasIndex(sa => new { sa.SurveyId, sa.UserId })
             .IsUnique();
         modelBuilder.Entity<SurveyResponse>()
-            .HasIndex(sr => new { sr.SurveyId, sr.UserId, sr.QuestionId })
+            .HasIndex(sr => new { sr.SurveyId, sr.UserId, sr.QuestionId, sr.SelectedOptionId })
             .IsUnique();
 
         modelBuilder.Entity<SurveyResponse>()
-            .HasIndex(sr => new { sr.SurveyId, sr.RespondentToken, sr.QuestionId })
+            .HasIndex(sr => new { sr.SurveyId, sr.RespondentToken, sr.QuestionId, sr.SelectedOptionId })
             .IsUnique()
             .HasFilter("\"RespondentToken\" IS NOT NULL");
 

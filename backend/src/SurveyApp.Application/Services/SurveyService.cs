@@ -189,13 +189,7 @@ public class SurveyService
                 QuestionId = sq.QuestionId,
                 QuestionText = sq.Question.Text,
                 IsRemovedFromSurvey = false,
-                UserAnswers = responses
-                    .Where(r => r.QuestionId == sq.QuestionId)
-                    .Select(r => new UserAnswerDto
-                    {
-                        UserEmail = r.User?.Email ?? "Anonim",
-                        SelectedOptionText = r.SelectedOption.Text
-                    }).ToList()
+                UserAnswers = BuildUserAnswers(responses.Where(r => r.QuestionId == sq.QuestionId))
             }).ToList();
 
         var removedQuestionSummaries = responses
@@ -206,11 +200,7 @@ public class SurveyService
                 QuestionId = g.Key,
                 QuestionText = g.First().Question.Text,
                 IsRemovedFromSurvey = true,
-                UserAnswers = g.Select(r => new UserAnswerDto
-                {
-                    UserEmail = r.User?.Email ?? "Anonim",
-                    SelectedOptionText = r.SelectedOption.Text
-                }).ToList()
+                UserAnswers = BuildUserAnswers(g)
             });
 
         questionSummaries.AddRange(removedQuestionSummaries);
@@ -235,6 +225,26 @@ public class SurveyService
             }).ToList(),
             QuestionSummaries = questionSummaries
         };
+    }
+
+    private static List<UserAnswerDto> BuildUserAnswers(IEnumerable<SurveyResponse> responses)
+    {
+        return responses
+            .GroupBy(r => (r.UserId, r.RespondentToken))
+            .Select(g =>
+            {
+                var first = g.First();
+                var optionTexts = g
+                    .Where(r => r.SelectedOption is not null)
+                    .OrderBy(r => r.SelectedOption!.Order)
+                    .Select(r => r.SelectedOption!.Text);
+
+                return new UserAnswerDto
+                {
+                    UserEmail = first.User?.Email ?? "Anonim",
+                    AnswerText = first.TextValue ?? string.Join(", ", optionTexts)
+                };
+            }).ToList();
     }
 
     private static bool IsVisibleTo(Survey survey, Guid userId, bool isAdmin) =>

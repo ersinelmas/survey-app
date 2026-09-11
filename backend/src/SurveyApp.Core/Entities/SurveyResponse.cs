@@ -15,8 +15,10 @@ public class SurveyResponse
     public Guid QuestionId { get; set; }
     public Question Question { get; set; } = null!;
 
-    public Guid SelectedOptionId { get; set; }
-    public AnswerOption SelectedOption { get; set; } = null!;
+    public Guid? SelectedOptionId { get; set; }
+    public AnswerOption? SelectedOption { get; set; }
+
+    public string? TextValue { get; set; }
 
     public DateTime AnsweredAt { get; set; } = DateTime.UtcNow;
 }
