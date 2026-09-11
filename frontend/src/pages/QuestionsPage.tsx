@@ -12,12 +12,18 @@ import {
     getQuestionsPaged, createQuestion, updateQuestion, deleteQuestion, duplicateQuestion, setQuestionIsDefault,
 } from '../api/questionApi';
 import { getAnswerTemplates } from '../api/answerTemplateApi';
-import type { Question } from '../types/question';
+import type { Question, QuestionType } from '../types/question';
 import type { AnswerTemplate } from '../types/answerTemplate';
 import { useCrudPage } from '../hooks/useCrudPage';
 import { useAuth } from '../context/AuthContext';
 import { useSnackbar } from '../context/SnackbarContext';
 import { extractErrorMessage } from '../api/errorHelper';
+
+const QUESTION_TYPE_LABELS: Record<QuestionType, string> = {
+    SingleChoice: 'Tekli Seçim',
+    MultipleChoice: 'Çoktan Seçmeli',
+    FreeText: 'Serbest Metin',
+};
 
 function QuestionsPage() {
     const { isAdmin } = useAuth();
@@ -33,7 +39,9 @@ function QuestionsPage() {
     });
     const [templates, setTemplates] = useState<AnswerTemplate[]>([]);
     const [text, setText] = useState('');
+    const [type, setType] = useState<QuestionType>('SingleChoice');
     const [answerTemplateId, setAnswerTemplateId] = useState('');
+    const requiresTemplate = type === 'SingleChoice' || type === 'MultipleChoice';
     const canModify = (question: Question) => question.isMine || (isAdmin && question.isDefault);
 
     const handleDuplicate = async (id: string) => {
@@ -63,6 +71,7 @@ function QuestionsPage() {
     const openCreateDialog = () => {
         setEditingId(null);
         setText('');
+        setType('SingleChoice');
         setAnswerTemplateId('');
         setError('');
         setDialogOpen(true);
@@ -71,21 +80,23 @@ function QuestionsPage() {
     const openEditDialog = (question: Question) => {
         setEditingId(question.id);
         setText(question.text);
-        setAnswerTemplateId(question.answerTemplateId);
+        setType(question.type);
+        setAnswerTemplateId(question.answerTemplateId ?? '');
         setError('');
         setDialogOpen(true);
     };
 
     const handleSave = () => {
-        if (!answerTemplateId) {
+        if (requiresTemplate && !answerTemplateId) {
             setError('Lütfen bir cevap şablonu seçin.');
             return;
         }
+        const request = { text, type, answerTemplateId: requiresTemplate ? answerTemplateId : null };
         runSave(async () => {
             if (editingId) {
-                await updateQuestion(editingId, { text, answerTemplateId });
+                await updateQuestion(editingId, request);
             } else {
-                await createQuestion({ text, answerTemplateId });
+                await createQuestion(request);
             }
         });
     };
@@ -115,7 +126,10 @@ function QuestionsPage() {
                                         )}
                                     </>
                                 }
-                                fields={[{ label: 'CEVAP ŞABLONU', value: question.answerTemplateName }]}
+                                fields={[
+                                    { label: 'TİP', value: QUESTION_TYPE_LABELS[question.type] },
+                                    { label: 'CEVAP ŞABLONU', value: question.answerTemplateName ?? '—' },
+                                ]}
                                 actions={
                                     <>
                                         {isAdmin && (question.isMine || question.isDefault) && (
@@ -150,6 +164,7 @@ function QuestionsPage() {
                             <TableHead>
                                 <TableRow>
                                     <TableCell>SORU METNİ</TableCell>
+                                    <TableCell>TİP</TableCell>
                                     <TableCell>CEVAP ŞABLONU</TableCell>
                                     <TableCell align="right">İŞLEMLER</TableCell>
                                 </TableRow>
@@ -163,7 +178,8 @@ function QuestionsPage() {
                                                 <Chip label="Varsayılan" size="small" sx={{ ml: 1 }} />
                                             )}
                                         </TableCell>
-                                        <TableCell>{question.answerTemplateName}</TableCell>
+                                        <TableCell>{QUESTION_TYPE_LABELS[question.type]}</TableCell>
+                                        <TableCell>{question.answerTemplateName ?? '—'}</TableCell>
                                         <TableCell align="right">
                                             {isAdmin && (question.isMine || question.isDefault) && (
                                                 <IconButton
@@ -222,18 +238,34 @@ function QuestionsPage() {
                     />
                     <TextField
                         select
-                        label="Cevap Şablonu"
+                        label="Soru Tipi"
                         fullWidth
                         margin="normal"
-                        value={answerTemplateId}
-                        onChange={(e) => setAnswerTemplateId(e.target.value)}
+                        value={type}
+                        onChange={(e) => setType(e.target.value as QuestionType)}
                     >
-                        {templates.map((template) => (
-                            <MenuItem key={template.id} value={template.id}>
-                                {template.name}
+                        {Object.entries(QUESTION_TYPE_LABELS).map(([value, label]) => (
+                            <MenuItem key={value} value={value}>
+                                {label}
                             </MenuItem>
                         ))}
                     </TextField>
+                    {requiresTemplate && (
+                        <TextField
+                            select
+                            label="Cevap Şablonu"
+                            fullWidth
+                            margin="normal"
+                            value={answerTemplateId}
+                            onChange={(e) => setAnswerTemplateId(e.target.value)}
+                        >
+                            {templates.map((template) => (
+                                <MenuItem key={template.id} value={template.id}>
+                                    {template.name}
+                                </MenuItem>
+                            ))}
+                        </TextField>
+                    )}
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={() => setDialogOpen(false)}>İptal</Button>

@@ -152,7 +152,7 @@ function SurveyReportPage() {
                             {q.userAnswers.map((a, idx) => (
                                 <TableRow key={idx}>
                                     <TableCell>{a.userEmail}</TableCell>
-                                    <TableCell>{a.selectedOptionText}</TableCell>
+                                    <TableCell>{a.answerText}</TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>

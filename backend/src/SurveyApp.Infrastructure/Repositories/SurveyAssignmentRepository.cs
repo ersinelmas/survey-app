@@ -29,7 +29,7 @@ public class SurveyAssignmentRepository : ISurveyAssignmentRepository
                 .ThenInclude(s => s.SurveyQuestions)
                     .ThenInclude(sq => sq.Question)
                         .ThenInclude(q => q.AnswerTemplate)
-                            .ThenInclude(at => at.Options)
+                            .ThenInclude(at => at!.Options)
             .FirstOrDefaultAsync(a => a.UserId == userId && a.SurveyId == surveyId);
     }
 

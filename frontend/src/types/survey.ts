@@ -47,7 +47,7 @@ export interface QuestionResponseSummary {
     questionId: string;
     questionText: string;
     isRemovedFromSurvey: boolean;
-    userAnswers: { userEmail: string; selectedOptionText: string }[];
+    userAnswers: { userEmail: string; answerText: string }[];
 }
 
 export interface SurveyReport {

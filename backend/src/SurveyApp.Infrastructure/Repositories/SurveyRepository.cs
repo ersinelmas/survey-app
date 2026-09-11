@@ -52,7 +52,7 @@ public class SurveyRepository : GenericRepository<Survey>, ISurveyRepository
     public async Task<Survey?> GetByIdForFillingAsync(Guid id)
     {
         return await _context.Surveys
-            .Include(s => s.SurveyQuestions).ThenInclude(sq => sq.Question).ThenInclude(q => q.AnswerTemplate).ThenInclude(at => at.Options)
+            .Include(s => s.SurveyQuestions).ThenInclude(sq => sq.Question).ThenInclude(q => q.AnswerTemplate).ThenInclude(at => at!.Options)
             .FirstOrDefaultAsync(s => s.Id == id);
     }
 

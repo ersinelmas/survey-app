@@ -1,3 +1,5 @@
+import type { QuestionType } from './question';
+
 export interface AssignedSurvey {
     surveyId: string;
     title: string;
@@ -13,6 +15,7 @@ export interface SurveyFillOption {
 export interface SurveyFillQuestion {
     questionId: string;
     text: string;
+    type: QuestionType;
     options: SurveyFillOption[];
 }
 
@@ -25,7 +28,8 @@ export interface SurveyFillDetail {
 
 export interface SubmitAnswer {
     questionId: string;
-    selectedOptionId: string;
+    selectedOptionIds: string[];
+    textValue: string | null;
 }
 
 export interface SubmitSurveyRequest {

@@ -1,13 +1,31 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link as RouterLink } from 'react-router-dom';
 import {
-    Box, Typography, Paper, RadioGroup, Radio, FormControlLabel, FormControl,
-    FormLabel, Button, Alert, Container, Link,
+    Box, Typography, Paper, RadioGroup, Radio, Checkbox, FormControlLabel, FormControl,
+    FormLabel, FormGroup, TextField, Button, Alert, Container, Link,
 } from '@mui/material';
 import { getPublicSurvey, submitPublicSurvey } from '../api/surveyFillingApi';
-import type { PublicSurveyDetail } from '../types/surveyFilling';
+import type { PublicSurveyDetail, SurveyFillQuestion, SubmitAnswer } from '../types/surveyFilling';
 import { extractErrorMessage } from '../api/errorHelper';
 import { useAuth } from '../context/AuthContext';
+
+interface QuestionAnswer {
+    optionIds: string[];
+    text: string;
+}
+
+function isAnswered(question: SurveyFillQuestion, answer: QuestionAnswer | undefined): boolean {
+    if (!answer) return false;
+    if (question.type === 'FreeText') return answer.text.trim().length > 0;
+    return answer.optionIds.length > 0;
+}
+
+function toSubmitAnswer(questionId: string, question: SurveyFillQuestion, answer: QuestionAnswer): SubmitAnswer {
+    if (question.type === 'FreeText') {
+        return { questionId, selectedOptionIds: [], textValue: answer.text.trim() };
+    }
+    return { questionId, selectedOptionIds: answer.optionIds, textValue: null };
+}
 
 function getOrCreateRespondentToken(surveyId: string): string {
     const key = `public-survey-token-${surveyId}`;
@@ -27,7 +45,7 @@ function PublicFillSurveyPage() {
     const navigate = useNavigate();
     const { isAuthenticated } = useAuth();
     const [survey, setSurvey] = useState<PublicSurveyDetail | null>(null);
-    const [answers, setAnswers] = useState<Record<string, string>>({});
+    const [answers, setAnswers] = useState<Record<string, QuestionAnswer>>({});
     const [error, setError] = useState('');
     const [submitting, setSubmitting] = useState(false);
     const [submitted, setSubmitted] = useState(false);
@@ -41,14 +59,26 @@ function PublicFillSurveyPage() {
             .finally(() => setLoading(false));
     }, [surveyId]);
 
-    const handleAnswerChange = (questionId: string, optionId: string) => {
-        setAnswers((prev) => ({ ...prev, [questionId]: optionId }));
+    const handleSingleChoiceChange = (questionId: string, optionId: string) => {
+        setAnswers((prev) => ({ ...prev, [questionId]: { optionIds: [optionId], text: '' } }));
+    };
+
+    const handleMultipleChoiceChange = (questionId: string, optionId: string, checked: boolean) => {
+        setAnswers((prev) => {
+            const current = prev[questionId]?.optionIds ?? [];
+            const optionIds = checked ? [...current, optionId] : current.filter((id) => id !== optionId);
+            return { ...prev, [questionId]: { optionIds, text: '' } };
+        });
+    };
+
+    const handleTextChange = (questionId: string, text: string) => {
+        setAnswers((prev) => ({ ...prev, [questionId]: { optionIds: [], text } }));
     };
 
     const handleSubmit = async () => {
         if (!survey || !surveyId || submitting) return;
 
-        if (Object.keys(answers).length !== survey.questions.length) {
+        if (!survey.questions.every((q) => isAnswered(q, answers[q.questionId]))) {
             setError('Lütfen tüm soruları cevaplayın.');
             return;
         }
@@ -57,10 +87,7 @@ function PublicFillSurveyPage() {
         setError('');
         try {
             await submitPublicSurvey(surveyId, {
-                answers: Object.entries(answers).map(([questionId, selectedOptionId]) => ({
-                    questionId,
-                    selectedOptionId,
-                })),
+                answers: survey.questions.map((q) => toSubmitAnswer(q.questionId, q, answers[q.questionId])),
                 respondentToken: getOrCreateRespondentToken(surveyId),
             });
             setSubmitted(true);
@@ -115,23 +142,50 @@ function PublicFillSurveyPage() {
 
                     {survey.questions.map((question, index) => (
                         <Paper key={question.questionId} sx={{ p: 2, mb: 2 }}>
-                            <FormControl>
+                            <FormControl fullWidth>
                                 <FormLabel>
                                     {index + 1}. {question.text}
                                 </FormLabel>
-                                <RadioGroup
-                                    value={answers[question.questionId] || ''}
-                                    onChange={(e) => handleAnswerChange(question.questionId, e.target.value)}
-                                >
-                                    {question.options.map((option) => (
-                                        <FormControlLabel
-                                            key={option.optionId}
-                                            value={option.optionId}
-                                            control={<Radio />}
-                                            label={option.text}
-                                        />
-                                    ))}
-                                </RadioGroup>
+                                {question.type === 'SingleChoice' && (
+                                    <RadioGroup
+                                        value={answers[question.questionId]?.optionIds[0] || ''}
+                                        onChange={(e) => handleSingleChoiceChange(question.questionId, e.target.value)}
+                                    >
+                                        {question.options.map((option) => (
+                                            <FormControlLabel
+                                                key={option.optionId}
+                                                value={option.optionId}
+                                                control={<Radio />}
+                                                label={option.text}
+                                            />
+                                        ))}
+                                    </RadioGroup>
+                                )}
+                                {question.type === 'MultipleChoice' && (
+                                    <FormGroup>
+                                        {question.options.map((option) => (
+                                            <FormControlLabel
+                                                key={option.optionId}
+                                                control={
+                                                    <Checkbox
+                                                        checked={answers[question.questionId]?.optionIds.includes(option.optionId) ?? false}
+                                                        onChange={(e) => handleMultipleChoiceChange(question.questionId, option.optionId, e.target.checked)}
+                                                    />
+                                                }
+                                                label={option.text}
+                                            />
+                                        ))}
+                                    </FormGroup>
+                                )}
+                                {question.type === 'FreeText' && (
+                                    <TextField
+                                        multiline
+                                        minRows={2}
+                                        sx={{ mt: 1 }}
+                                        value={answers[question.questionId]?.text ?? ''}
+                                        onChange={(e) => handleTextChange(question.questionId, e.target.value)}
+                                    />
+                                )}
                             </FormControl>
                         </Paper>
                     ))}
