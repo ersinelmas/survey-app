@@ -12,8 +12,8 @@ public class CreateAnswerTemplateRequestValidator : AbstractValidator<CreateAnsw
             .MaximumLength(200).WithMessage("Şablon adı 200 karakterden uzun olamaz.");
 
         RuleFor(x => x.Options)
-            .Must(o => o.Count >= 2 && o.Count <= 4)
-            .WithMessage("Şık sayısı 2 ile 4 arasında olmalıdır.");
+            .Must(o => o.Count >= 2 && o.Count <= 10)
+            .WithMessage("Şık sayısı 2 ile 10 arasında olmalıdır.");
 
         RuleFor(x => x.Options)
             .Must(o => o.Select(option => option.Text.Trim()).Distinct(StringComparer.OrdinalIgnoreCase).Count() == o.Count)

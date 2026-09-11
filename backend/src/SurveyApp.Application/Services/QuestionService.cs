@@ -51,14 +51,19 @@ public class QuestionService
 
     public async Task<QuestionDto> CreateAsync(CreateQuestionRequest request, Guid currentUserId)
     {
-        var template = await _answerTemplateRepository.GetByIdAsync(request.AnswerTemplateId);
-        if (template is null || !(template.OwnerId is null || template.OwnerId == currentUserId))
-            throw new KeyNotFoundException("Belirtilen cevap şablonu bulunamadı.");
+        AnswerTemplate? template = null;
+        if (request.AnswerTemplateId is { } templateId)
+        {
+            template = await _answerTemplateRepository.GetByIdAsync(templateId);
+            if (template is null || !(template.OwnerId is null || template.OwnerId == currentUserId))
+                throw new KeyNotFoundException("Belirtilen cevap şablonu bulunamadı.");
+        }
 
         var question = new Question
         {
             Id = Guid.NewGuid(),
             Text = request.Text,
+            Type = request.Type,
             AnswerTemplateId = request.AnswerTemplateId,
             OwnerId = currentUserId
         };
@@ -79,25 +84,33 @@ public class QuestionService
         if (!CanModify(question, currentUserId, isAdmin))
             throw new ForbiddenAccessException("Bu soruyu düzenleme yetkiniz yok.");
 
-        AnswerTemplate template;
+        AnswerTemplate? template;
         if (question.AnswerTemplateId != request.AnswerTemplateId)
         {
-            var newTemplate = await _answerTemplateRepository.GetByIdAsync(request.AnswerTemplateId);
-            if (newTemplate is null || !(newTemplate.OwnerId is null || newTemplate.OwnerId == currentUserId))
-                throw new KeyNotFoundException("Belirtilen cevap şablonu bulunamadı.");
+            if (request.AnswerTemplateId is { } newTemplateId)
+            {
+                var newTemplate = await _answerTemplateRepository.GetByIdAsync(newTemplateId);
+                if (newTemplate is null || !(newTemplate.OwnerId is null || newTemplate.OwnerId == currentUserId))
+                    throw new KeyNotFoundException("Belirtilen cevap şablonu bulunamadı.");
+
+                template = newTemplate;
+            }
+            else
+            {
+                template = null;
+            }
 
             var isUsed = await _responseRepository.IsQuestionUsedInAnyResponseAsync(id);
             if (isUsed)
                 throw new InvalidOperationException("Bu soru en az bir ankette cevaplanmış, cevap şablonu değiştirilemez.");
-
-            template = newTemplate;
         }
         else
         {
-            template = question.AnswerTemplate!;
+            template = question.AnswerTemplate;
         }
 
         question.Text = request.Text;
+        question.Type = request.Type;
         question.AnswerTemplateId = request.AnswerTemplateId;
         question.AnswerTemplate = template;
 
@@ -133,6 +146,7 @@ public class QuestionService
         {
             Id = Guid.NewGuid(),
             Text = source.Text,
+            Type = source.Type,
             AnswerTemplateId = source.AnswerTemplateId,
             OwnerId = currentUserId
         };
@@ -174,8 +188,9 @@ public class QuestionService
         {
             Id = question.Id,
             Text = question.Text,
+            Type = question.Type,
             AnswerTemplateId = question.AnswerTemplateId,
-            AnswerTemplateName = question.AnswerTemplate.Name,
+            AnswerTemplateName = question.AnswerTemplate?.Name,
             IsDefault = question.OwnerId is null,
             IsMine = question.OwnerId == currentUserId
         };
