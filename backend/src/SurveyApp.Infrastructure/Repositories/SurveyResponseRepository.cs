@@ -34,6 +34,16 @@ public class SurveyResponseRepository : ISurveyResponseRepository
             .ToListAsync();
     }
 
+    public async Task<List<SurveyResponse>> GetByUserIdAsync(Guid userId)
+    {
+        return await _context.SurveyResponses
+            .Include(r => r.Survey)
+            .Include(r => r.Question)
+            .Include(r => r.SelectedOption)
+            .Where(r => r.UserId == userId)
+            .ToListAsync();
+    }
+
     public async Task<bool> IsOptionUsedInAnyResponseAsync(Guid optionId)
     {
         return await _context.SurveyResponses.AnyAsync(r => r.SelectedOptionId == optionId);

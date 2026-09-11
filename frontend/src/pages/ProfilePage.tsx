@@ -8,18 +8,20 @@ import Layout from '../components/Layout';
 import BackButton from '../components/BackButton';
 import { useAuth } from '../context/AuthContext';
 import { useSnackbar } from '../context/SnackbarContext';
-import { changePassword, deleteAccount } from '../api/authApi';
+import { changePassword, deleteAccount, getDataExport } from '../api/authApi';
 import { extractErrorMessage } from '../api/errorHelper';
 
 function ProfilePage() {
     const { email, logout } = useAuth();
-    const { showSuccess } = useSnackbar();
+    const { showSuccess, showError } = useSnackbar();
     const navigate = useNavigate();
 
     const [currentPassword, setCurrentPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [passwordError, setPasswordError] = useState('');
     const [savingPassword, setSavingPassword] = useState(false);
+
+    const [exporting, setExporting] = useState(false);
 
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [deletePassword, setDeletePassword] = useState('');
@@ -39,6 +41,26 @@ function ProfilePage() {
             setPasswordError(extractErrorMessage(err));
         } finally {
             setSavingPassword(false);
+        }
+    };
+
+    const handleExportData = async () => {
+        setExporting(true);
+        try {
+            const data = await getDataExport();
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `verilerim-${new Date().toISOString().slice(0, 10)}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        } catch (err) {
+            showError(extractErrorMessage(err));
+        } finally {
+            setExporting(false);
         }
     };
 
@@ -98,6 +120,17 @@ function ProfilePage() {
                             Şifreyi Güncelle
                         </Button>
                     </form>
+                </Paper>
+
+                <Paper sx={{ p: 3 }}>
+                    <Typography variant="h6" sx={{ mb: 1 }}>Verilerimi İndir</Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                        Hesap bilgilerinizi, sahip olduğunuz anket/soru/cevap şablonlarını ve başkalarının
+                        anketlerine verdiğiniz cevapları JSON dosyası olarak indirebilirsiniz.
+                    </Typography>
+                    <Button variant="outlined" onClick={handleExportData} disabled={exporting}>
+                        {exporting ? 'Hazırlanıyor...' : 'Verilerimi İndir'}
+                    </Button>
                 </Paper>
 
                 <Paper sx={{ p: 3, borderColor: 'error.main', borderWidth: 1, borderStyle: 'solid' }}>

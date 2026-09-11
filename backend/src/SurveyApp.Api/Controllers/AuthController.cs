@@ -66,6 +66,14 @@ public class AuthController : ControllerBase
         return Ok(new { email, isAdmin });
     }
 
+    [HttpGet("me/data-export")]
+    [Microsoft.AspNetCore.Authorization.Authorize]
+    public async Task<IActionResult> GetDataExport()
+    {
+        var export = await _accountService.GetDataExportAsync(User.GetUserId());
+        return Ok(export);
+    }
+
     [HttpDelete("me")]
     [Microsoft.AspNetCore.Authorization.Authorize]
     [Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("auth")]
